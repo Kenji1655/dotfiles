@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+has_ethernet="0"
+has_wifi="0"
+
+for iface_path in /sys/class/net/*; do
+  iface="$(basename "$iface_path")"
+
+  case "$iface" in
+    lo|docker*|br-*|veth*|virbr*|tun*|tap*|wg*|zt*|tailscale*)
+      continue
+      ;;
+  esac
+
+  operstate="down"
+  carrier="0"
+  [[ -r "$iface_path/operstate" ]] && operstate="$(cat "$iface_path/operstate")"
+  [[ -r "$iface_path/carrier" ]] && carrier="$(cat "$iface_path/carrier" 2>/dev/null || printf '0')"
+
+  [[ "$operstate" == "up" || "$carrier" == "1" ]] || continue
+
+  if [[ -d "$iface_path/wireless" ]]; then
+    has_wifi="1"
+  else
+    has_ethernet="1"
+  fi
+done
+
+if [[ "$has_ethernet" == "1" ]]; then
+  printf '%%{F#8ec07c}󰈀%%{F-}\n'
+elif [[ "$has_wifi" == "1" ]]; then
+  printf '%%{F#8ec07c}%%{F-}\n'
+else
+  printf '%%{F#fb4934}󰤭%%{F-}\n'
+fi

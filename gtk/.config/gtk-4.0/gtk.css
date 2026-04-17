@@ -1,0 +1,54 @@
+@define-color window_bg_color #1d2021;
+@define-color window_fg_color #fbf1c7;
+@define-color view_bg_color #282828;
+@define-color view_fg_color #fbf1c7;
+@define-color headerbar_bg_color #282828;
+@define-color headerbar_fg_color #fbf1c7;
+@define-color card_bg_color #282828;
+@define-color card_fg_color #fbf1c7;
+@define-color dialog_bg_color #1d2021;
+@define-color dialog_fg_color #fbf1c7;
+@define-color popover_bg_color #282828;
+@define-color popover_fg_color #fbf1c7;
+@define-color accent_bg_color #8ec07c;
+@define-color accent_fg_color #1d2021;
+@define-color accent_color #8ec07c;
+@define-color destructive_bg_color #fb4934;
+@define-color destructive_fg_color #1d2021;
+@define-color warning_bg_color #fabd2f;
+@define-color warning_fg_color #1d2021;
+@define-color success_bg_color #b8bb26;
+@define-color success_fg_color #1d2021;
+@define-color error_bg_color #fb4934;
+@define-color error_fg_color #1d2021;
+
+window,
+dialog,
+popover {
+  background-color: @window_bg_color;
+  color: @window_fg_color;
+}
+
+headerbar,
+.titlebar {
+  background-color: @headerbar_bg_color;
+  color: @headerbar_fg_color;
+}
+
+entry,
+textview,
+list,
+gridview,
+columnview {
+  background-color: @view_bg_color;
+  color: @view_fg_color;
+}
+
+button {
+  background-color: #3c3836;
+  color: #fbf1c7;
+}
+
+button:hover {
+  background-color: #504945;
+}

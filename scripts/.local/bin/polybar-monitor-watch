@@ -14,12 +14,14 @@ monitor_state() {
 
 last_state="$(monitor_state || true)"
 
-while sleep 2; do
+while sleep 0.25; do
   current_state="$(monitor_state || true)"
 
   if [[ -n "$current_state" && "$current_state" != "$last_state" ]]; then
+    sleep 0.1
+    current_state="$(monitor_state || true)"
+    [[ -n "$current_state" ]] || continue
     last_state="$current_state"
-    sleep 1
     "$HOME/.config/polybar/launch.sh" || true
   fi
 done

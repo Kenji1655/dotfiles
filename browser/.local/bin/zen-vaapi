@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+export LIBVA_DRIVER_NAME=radeonsi
+export MOZ_X11_EGL=1
+exec /opt/zen-browser-bin/zen-bin "$@"
