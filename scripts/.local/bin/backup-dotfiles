@@ -13,7 +13,7 @@ pacman -Qqm > "$backup_dir/aur-pkglist.txt" 2>/dev/null || true
 {
   printf 'Backup: %s\n' "$timestamp"
   printf 'Kernel: %s\n' "$(uname -r)"
-  printf 'Host: %s\n' "$(hostname)"
+  printf 'Host: %s\n' "$(cat /proc/sys/kernel/hostname 2>/dev/null || printf unknown)"
   printf '\nPacotes oficiais: %s\n' "$(wc -l < "$backup_dir/pkglist.txt")"
   printf 'Pacotes AUR: %s\n' "$(wc -l < "$backup_dir/aur-pkglist.txt")"
 } > "$backup_dir/last-backup.txt"
@@ -27,10 +27,10 @@ fi
 git -C "$dotfiles" add -A
 
 if git -C "$dotfiles" diff --cached --quiet; then
-  notify-send "Backup dotfiles" "Sem mudancas para salvar"
+  notify-send "Backup dotfiles" "Sem mudancas para salvar" 2>/dev/null || true
   printf 'Sem mudancas para salvar.\n'
 else
   git -C "$dotfiles" commit -m "backup: $timestamp"
-  notify-send "Backup dotfiles" "Snapshot criado: $timestamp"
+  notify-send "Backup dotfiles" "Snapshot criado: $timestamp" 2>/dev/null || true
   printf 'Snapshot criado: %s\n' "$timestamp"
 fi
