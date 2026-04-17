@@ -113,6 +113,8 @@ install_system_configs() {
     "$DOTFILES_DIR/ly/etc/ly/config.ini:/etc/ly/config.ini"
     "$DOTFILES_DIR/tlp/etc/tlp.d/01-thinkpad-e14-amd.conf:/etc/tlp.d/01-thinkpad-e14-amd.conf"
     "$DOTFILES_DIR/thinkfan/etc/thinkfan.yaml:/etc/thinkfan.yaml"
+    "$DOTFILES_DIR/lm_sensors/etc/sensors.d/thinkpad-e14-ddr5.conf:/etc/sensors.d/thinkpad-e14-ddr5.conf"
+    "$DOTFILES_DIR/lm_sensors/etc/sensors.d/thinkpad-isa.conf:/etc/sensors.d/thinkpad-isa.conf"
     "$DOTFILES_DIR/bluetooth/etc/bluetooth/main.conf:/etc/bluetooth/main.conf"
   )
   for pair in "${pairs[@]}"; do
@@ -130,6 +132,7 @@ enable_services() {
   run sudo systemctl enable NetworkManager.service
   run sudo systemctl enable bluetooth.service
   run sudo systemctl enable tlp.service
+  run sudo systemctl enable lm_sensors.service
   run sudo systemctl enable thinkfan.service thinkfan-sleep.service thinkfan-wakeup.service
   if systemctl list-unit-files displaylink.service >/dev/null 2>&1; then
     run sudo systemctl enable displaylink.service

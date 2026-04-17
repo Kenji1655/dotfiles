@@ -79,7 +79,7 @@ install_apt_packages() {
     fonts-noto fonts-inter fonts-liberation fonts-noto-color-emoji fonts-jetbrains-mono
     papirus-icon-theme lxappearance flameshot autorandr
     gvfs gvfs-backends policykit-1-gnome trash-cli file-roller zip p7zip-full unrar
-    ffmpeg ffmpegthumbnailer libpoppler-glib8 libnotify-bin
+    ffmpeg ffmpegthumbnailer libpoppler-glib8 libnotify-bin lm-sensors
     qt5ct qt6ct qt5-style-kvantum qt5-style-kvantum-themes xsettingsd
     python3-pip python3-pipx
     zsh-autosuggestions zsh-syntax-highlighting
