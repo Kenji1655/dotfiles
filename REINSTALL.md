@@ -37,6 +37,32 @@ sudo reboot
 - Wallpapers live in `~/.config/wallpaper` and are managed by `Super + Shift + W`.
 - Run `backup-dotfiles` before big changes to create a local git snapshot and update package lists.
 
+## Ubuntu 24.04.x
+
+For Ubuntu 24.04.x, use the Ubuntu-specific installer instead of the Arch installer:
+
+```bash
+sudo apt update
+sudo apt install -y git
+git clone https://github.com/YOUR_USER/YOUR_REPO.git ~/.dotfiles
+cd ~/.dotfiles
+./install-ubuntu-24.04.sh
+```
+
+Optional laptop packages such as TLP and thinkfan can be installed with:
+
+```bash
+./install-ubuntu-24.04.sh --optional
+```
+
+The Ubuntu installer intentionally does not apply the Arch-origin TLP/thinkfan system configs automatically and does not install DisplayLink by default. Review those manually per machine.
+
+After it finishes, reboot and choose the `i3` session on the login screen:
+
+```bash
+sudo reboot
+```
+
 ## Useful Commands
 
 Update dotfiles snapshot:
