@@ -1,0 +1,12 @@
+bibata-cursor-theme
+displaylink
+displaylink-debug
+evdi-dkms
+evdi-dkms-debug
+gruvbox-dark-gtk
+python-clickgen
+thinkfan
+xidlehook
+yay
+zen-browser-bin
+zsh-theme-powerlevel10k-git

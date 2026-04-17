@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ac_online="0"
+[[ -r /sys/class/power_supply/AC/online ]] && ac_online="$(cat /sys/class/power_supply/AC/online)"
+
+platform="unknown"
+[[ -r /sys/firmware/acpi/platform_profile ]] && platform="$(cat /sys/firmware/acpi/platform_profile)"
+
+epp="unknown"
+[[ -r /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference ]] && epp="$(cat /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference)"
+
+governor="unknown"
+[[ -r /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor ]] && governor="$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)"
+
+case "${1:-status}" in
+    status)
+        if [[ "$ac_online" == "1" ]]; then
+            printf '%%{B#3c3836}%%{F#b8bb26} 󰓅 PERF %%{F-}%%{B-}\n'
+        else
+            printf '%%{B#504945}%%{F#fabd2f} 󰾆 BAT %%{F-}%%{B-}\n'
+        fi
+        ;;
+    notify)
+        if [[ "$ac_online" == "1" ]]; then
+            mode="Tomada: performance maxima"
+        else
+            mode="Bateria: autonomia com desempenho balanceado"
+        fi
+
+        notify-send "Plano de energia" "$mode
+Platform: $platform
+EPP: $epp
+Governor: $governor"
+        ;;
+    *)
+        printf 'usage: %s [status|notify]\n' "$0" >&2
+        exit 2
+        ;;
+esac

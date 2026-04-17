@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+wallpaper_dirs=(
+  "$HOME/.config/wallpaper"
+  "$HOME/Pictures"
+  "$HOME/Pictures/Wallpapers"
+  "$HOME/Imagens"
+  "$HOME/Downloads"
+)
+
+existing_dirs=()
+for dir in "${wallpaper_dirs[@]}"; do
+  [[ -d "$dir" ]] && existing_dirs+=("$dir")
+done
+
+images="$(
+  find -L "${existing_dirs[@]}" -maxdepth 3 -type f \
+    \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' -o -iname '*.bmp' \) \
+    2>/dev/null | sort -u
+)"
+
+if [[ -z "$images" ]]; then
+  notify-send "Wallpaper" "Nenhuma imagem encontrada."
+  exit 0
+fi
+
+choice="$(
+  while IFS= read -r image; do
+    name="$(basename "$image")"
+    dir="$(basename "$(dirname "$image")")"
+    printf '%s/%s\0icon\x1f%s\n' "$dir" "$name" "$image"
+  done <<< "$images" |
+    rofi -dmenu \
+      -i \
+      -show-icons \
+      -p "Wallpaper" \
+      -theme-str 'window { width: 45%; }' \
+      -theme-str 'listview { lines: 10; columns: 1; }' \
+      -theme-str 'element-icon { size: 4em; }'
+)"
+
+[[ -n "${choice:-}" ]] || exit 0
+
+selected="$(
+  while IFS= read -r image; do
+    name="$(basename "$image")"
+    dir="$(basename "$(dirname "$image")")"
+    [[ "$choice" == "$dir/$name" ]] && printf '%s\n' "$image" && break
+  done <<< "$images"
+)"
+
+[[ -n "$selected" ]] || exit 1
+
+mkdir -p "$HOME/.cache"
+printf '%s\n' "$selected" > "$HOME/.cache/current-wallpaper"
+feh --no-fehbg --bg-fill "$selected"
+printf '#!/bin/sh\nfeh --no-fehbg --bg-fill %q\n' "$selected" > "$HOME/.fehbg"
+chmod +x "$HOME/.fehbg"
+
+notify-send "Wallpaper" "$(basename "$selected")"

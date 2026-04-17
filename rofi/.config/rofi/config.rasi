@@ -1,0 +1,97 @@
+/* Rofi configuration - Gruvbox Dark Hard */
+configuration {
+    modi: "drun,run,window";
+    show-icons: true;
+    icon-theme: "Papirus-Dark";
+    font: "JetBrainsMono Nerd Font 11";
+    drun-display-format: "{name}";
+    display-drun: "Apps";
+    display-run: "Run";
+    display-window: "Win";
+}
+
+* {
+    bg-hard: #1d2021;
+    bg: #282828;
+    bg1: #3c3836;
+    bg2: #504945;
+    bg3: #665c54;
+    fg: #ebdbb2;
+    cream: #fbf1c7;
+    warm: #d5c4a1;
+    fg4: #a89984;
+    red: #fb4934;
+    yellow: #fabd2f;
+    blue: #83a598;
+    aqua: #8ec07c;
+    transparent-bg: #1d2021f2;
+}
+
+window {
+    width: 42%;
+    location: center;
+    anchor: center;
+    border: 2px;
+    border-color: @cream;
+    border-radius: 8px;
+    background-color: @transparent-bg;
+}
+
+mainbox {
+    padding: 16px;
+    spacing: 12px;
+    background-color: transparent;
+}
+
+inputbar {
+    background-color: @bg;
+    border: 1px;
+    border-color: @bg2;
+    border-radius: 6px;
+    padding: 11px 14px;
+    spacing: 10px;
+    children: [ prompt, entry ];
+}
+
+prompt {
+    text-color: @cream;
+    font: "JetBrainsMono Nerd Font 11";
+}
+
+entry {
+    placeholder: "Buscar...";
+    placeholder-color: @fg4;
+    text-color: @cream;
+    cursor-color: @cream;
+}
+
+listview {
+    lines: 8;
+    columns: 1;
+    fixed-height: false;
+    spacing: 6px;
+    background-color: transparent;
+}
+
+element {
+    padding: 9px 12px;
+    border-radius: 6px;
+    text-color: @warm;
+    background-color: transparent;
+}
+
+element selected {
+    background-color: @bg1;
+    text-color: @cream;
+    border: 0 0 0 3px;
+    border-color: @aqua;
+}
+
+element-icon {
+    size: 24px;
+    margin: 0 10px 0 0;
+}
+
+element-text {
+    text-color: inherit;
+}

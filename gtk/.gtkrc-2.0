@@ -1,0 +1,7 @@
+# GTK2 theme settings
+include "/usr/share/themes/gruvbox-dark-gtk/gtk-2.0/gtkrc"
+gtk-theme-name="gruvbox-dark-gtk"
+gtk-icon-theme-name="Papirus-Dark"
+gtk-cursor-theme-name="Bibata-Modern-Classic"
+gtk-cursor-theme-size=24
+gtk-font-name="Inter 10"

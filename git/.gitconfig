@@ -1,0 +1,50 @@
+[user]
+    name =
+    email =
+
+[core]
+    editor = nvim
+    pager = delta
+    autocrlf = input
+
+[init]
+    defaultBranch = main
+
+[pull]
+    rebase = true
+
+[push]
+    autoSetupRemote = true
+
+[merge]
+    conflictstyle = diff3
+
+[diff]
+    colorMoved = default
+
+[delta]
+    navigate = true
+    side-by-side = true
+    line-numbers = true
+    syntax-theme = gruvbox-dark
+    minus-style = "syntax #3c3836"
+    minus-emph-style = "syntax #fb4934"
+    plus-style = "syntax #282828"
+    plus-emph-style = "syntax #b8bb26"
+    line-numbers-minus-style = "#fb4934"
+    line-numbers-plus-style = "#b8bb26"
+    line-numbers-zero-style = "#665c54"
+    hunk-header-style = file line-number syntax
+    file-style = "#fabd2f bold"
+    file-decoration-style = "#fabd2f ul"
+
+[alias]
+    st = status
+    co = checkout
+    br = branch
+    ci = commit
+    lg = log --oneline --graph --decorate --all
+    last = log -1 HEAD
+    unstage = reset HEAD --
+    amend = commit --amend --no-edit
+    wip = !git add -A && git commit -m 'wip'

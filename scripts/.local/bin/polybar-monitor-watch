@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+lockfile="/tmp/polybar-monitor-watch.lock"
+exec 9>"$lockfile"
+flock -n 9 || exit 0
+
+export DISPLAY="${DISPLAY:-:0}"
+export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+
+monitor_state() {
+  xrandr --query 2>/dev/null | awk '/ connected/ {print $1}' | sort | paste -sd ' ' -
+}
+
+last_state="$(monitor_state || true)"
+
+while sleep 2; do
+  current_state="$(monitor_state || true)"
+
+  if [[ -n "$current_state" && "$current_state" != "$last_state" ]]; then
+    last_state="$current_state"
+    sleep 1
+    "$HOME/.config/polybar/launch.sh" || true
+  fi
+done

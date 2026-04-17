@@ -1,0 +1,112 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}"
+seen_file="$cache_dir/dunst-notifications.seen"
+
+count() {
+    dunstctl count "$1" 2>/dev/null || printf '0'
+}
+
+history_ids() {
+    dunstctl history 2>/dev/null | python3 -c '
+import json
+import sys
+
+try:
+    payload = json.load(sys.stdin)
+except json.JSONDecodeError:
+    sys.exit(0)
+
+for group in payload.get("data", []):
+    for notification in group:
+        value = notification.get("id", {}).get("data")
+        if value is not None:
+            print(value)
+'
+}
+
+unseen_history_ids() {
+    local id
+    local -A seen=()
+
+    mkdir -p "$cache_dir"
+    touch "$seen_file"
+
+    while IFS= read -r id; do
+        [[ -n "$id" ]] && seen["$id"]=1
+    done < "$seen_file"
+
+    while IFS= read -r id; do
+        [[ -n "$id" && -z "${seen[$id]:-}" ]] && printf '%s\n' "$id"
+    done < <(history_ids)
+
+    return 0
+}
+
+status() {
+    local history waiting total paused icon color
+
+    history="$(unseen_history_ids | wc -l)"
+    waiting="$(count waiting)"
+    total=$((history + waiting))
+    paused="$(dunstctl is-paused 2>/dev/null || printf 'false')"
+
+    if [[ "$paused" == "true" ]]; then
+        icon=""
+        color="#fb4934"
+    else
+        icon=""
+        if (( total > 0 )); then
+            color="#fbf1c7"
+        else
+            color="#a89984"
+        fi
+    fi
+
+    if (( total > 0 )); then
+        printf '%%{F%s}%s %d%%{F-}\n' "$color" "$icon" "$total"
+    else
+        printf '%%{F%s}%s%%{F-}\n' "$color" "$icon"
+    fi
+}
+
+show_history() {
+    local id
+
+    mkdir -p "$cache_dir"
+    touch "$seen_file"
+    dunstctl set-paused false >/dev/null 2>&1 || true
+
+    while IFS= read -r id; do
+        [[ -z "$id" ]] && continue
+        dunstctl history-pop "$id" >/dev/null 2>&1 || true
+        printf '%s\n' "$id" >> "$seen_file"
+        sleep 0.12
+    done < <(unseen_history_ids)
+}
+
+clear_history() {
+    : > "$seen_file"
+    dunstctl close-all >/dev/null 2>&1 || true
+    dunstctl history-clear >/dev/null 2>&1 || true
+}
+
+case "${1:-status}" in
+    status)
+        status
+        ;;
+    show)
+        show_history
+        ;;
+    clear)
+        clear_history
+        ;;
+    toggle)
+        dunstctl set-paused toggle >/dev/null 2>&1 || true
+        ;;
+    *)
+        printf 'usage: %s [status|show|clear|toggle]\n' "$0" >&2
+        exit 2
+        ;;
+esac

@@ -1,0 +1,68 @@
+# Dunst notification configuration - Gruvbox Dark Hard
+[global]
+    monitor = 0
+    follow = mouse
+    width = 360
+    height = (0, 300)
+    origin = top-right
+    offset = (18, 58)
+    notification_limit = 5
+    progress_bar = true
+    progress_bar_height = 7
+    progress_bar_frame_width = 1
+    highlight = "#fbf1c7"
+    indicate_hidden = yes
+    shrink = no
+    separator_height = 1
+    separator_color = frame
+    padding = 12
+    horizontal_padding = 14
+    frame_width = 2
+    sort = yes
+    idle_threshold = 120
+    font = JetBrainsMono Nerd Font 10
+    line_height = 0
+    markup = full
+    format = <b>%s</b>\n%b
+    alignment = left
+    vertical_alignment = center
+    show_age_threshold = 60
+    ellipsize = middle
+    ignore_newline = no
+    stack_duplicates = true
+    hide_duplicate_count = false
+    show_indicators = yes
+    icon_position = left
+    min_icon_size = 0
+    max_icon_size = 44
+    icon_theme = Papirus-Dark
+    sticky_history = yes
+    history_length = 20
+    browser = firefox -new-tab
+    always_run_script = true
+    title = Dunst
+    class = Dunst
+    corner_radius = 8
+    ignore_dbusclose = false
+    force_xinerama = false
+    mouse_left_click = close_current
+    mouse_middle_click = do_action, close_current
+    mouse_right_click = close_all
+
+[urgency_low]
+    background = "#1d2021"
+    foreground = "#a89984"
+    frame_color = "#3c3836"
+    timeout = 5
+
+[urgency_normal]
+    background = "#282828"
+    foreground = "#fbf1c7"
+    frame_color = "#8ec07c"
+    timeout = 8
+
+[urgency_critical]
+    background = "#3c3836"
+    foreground = "#fbf1c7"
+    frame_color = "#fb4934"
+    timeout = 0

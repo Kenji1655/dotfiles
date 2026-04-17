@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+dotfiles="$HOME/.dotfiles"
+backup_dir="$dotfiles/backup"
+timestamp="$(date +%Y%m%d-%H%M%S)"
+
+mkdir -p "$backup_dir"
+
+pacman -Qqe > "$backup_dir/pkglist.txt"
+pacman -Qqm > "$backup_dir/aur-pkglist.txt" 2>/dev/null || true
+
+{
+  printf 'Backup: %s\n' "$timestamp"
+  printf 'Kernel: %s\n' "$(uname -r)"
+  printf 'Host: %s\n' "$(hostname)"
+  printf '\nPacotes oficiais: %s\n' "$(wc -l < "$backup_dir/pkglist.txt")"
+  printf 'Pacotes AUR: %s\n' "$(wc -l < "$backup_dir/aur-pkglist.txt")"
+} > "$backup_dir/last-backup.txt"
+
+if [[ ! -d "$dotfiles/.git" ]]; then
+  git -C "$dotfiles" init
+  git -C "$dotfiles" config user.name "Kenji"
+  git -C "$dotfiles" config user.email "kenji@local"
+fi
+
+git -C "$dotfiles" add -A
+
+if git -C "$dotfiles" diff --cached --quiet; then
+  notify-send "Backup dotfiles" "Sem mudancas para salvar"
+  printf 'Sem mudancas para salvar.\n'
+else
+  git -C "$dotfiles" commit -m "backup: $timestamp"
+  notify-send "Backup dotfiles" "Snapshot criado: $timestamp"
+  printf 'Snapshot criado: %s\n' "$timestamp"
+fi

@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export DISPLAY="${DISPLAY:-:0}"
+export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+
+record_dir="$HOME/Videos/Recordings"
+pid_file="$HOME/.cache/screen-recorder.pid"
+mkdir -p "$record_dir" "$HOME/.cache"
+
+is_recording() {
+  [[ -s "$pid_file" ]] && kill -0 "$(cat "$pid_file")" 2>/dev/null
+}
+
+stop_recording() {
+  if is_recording; then
+    kill -INT "$(cat "$pid_file")" 2>/dev/null || true
+    rm -f "$pid_file"
+    notify-send "󰓛 Gravacao finalizada" "$record_dir"
+  else
+    rm -f "$pid_file"
+    notify-send "Gravacao" "Nenhuma gravacao em andamento"
+  fi
+}
+
+screen_size() {
+  xrandr --current | awk '/current/ {
+    for (i = 1; i <= NF; i++) {
+      if ($i == "current") {
+        gsub(",", "", $(i + 1));
+        gsub(",", "", $(i + 3));
+        print $(i + 1) "x" $(i + 3);
+        exit;
+      }
+    }
+  }'
+}
+
+start_recording() {
+  local mode="$1"
+  local geometry offset size output
+
+  if is_recording; then
+    notify-send "Gravacao" "Ja existe uma gravacao em andamento"
+    exit 0
+  fi
+
+  output="$record_dir/recording-$(date +%Y%m%d-%H%M%S).mkv"
+
+  case "$mode" in
+    area)
+      if ! command -v slop >/dev/null 2>&1; then
+        notify-send "Gravacao" "Instale o slop para selecionar area"
+        exit 1
+      fi
+      geometry="$(slop -f '%x %y %w %h')"
+      read -r x y w h <<< "$geometry"
+      offset="$x,$y"
+      size="${w}x${h}"
+      ;;
+    full)
+      offset="0,0"
+      size="$(screen_size)"
+      ;;
+    *)
+      exit 2
+      ;;
+  esac
+
+  ffmpeg \
+    -hide_banner \
+    -loglevel warning \
+    -f x11grab \
+    -framerate 30 \
+    -video_size "$size" \
+    -i "$DISPLAY+$offset" \
+    -f pulse \
+    -i default \
+    -c:v libx264 \
+    -preset veryfast \
+    -crf 23 \
+    -c:a aac \
+    -b:a 160k \
+    "$output" > "$HOME/.cache/screen-recorder.log" 2>&1 &
+
+  printf '%s\n' "$!" > "$pid_file"
+  notify-send "󰑋 Gravando tela" "$(basename "$output")"
+}
+
+choice="${1:-menu}"
+
+if [[ "$choice" == "menu" ]]; then
+  if is_recording; then
+    choice="$(printf '󰓛 Parar gravacao\n' | rofi -dmenu -p 'Gravacao')"
+  else
+    choice="$(printf '󰍹 Tela inteira\n󰩭 Selecionar area\n' | rofi -dmenu -p 'Gravacao')"
+  fi
+
+  case "$choice" in
+    *"Tela inteira"*) start_recording full ;;
+    *"Selecionar area"*) start_recording area ;;
+    *"Parar gravacao"*) stop_recording ;;
+  esac
+elif [[ "$choice" == "stop" ]]; then
+  stop_recording
+elif [[ "$choice" == "full" || "$choice" == "area" ]]; then
+  start_recording "$choice"
+else
+  printf 'usage: %s [menu|full|area|stop]\n' "$0" >&2
+  exit 2
+fi

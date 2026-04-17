@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+for hwmon in /sys/class/hwmon/hwmon*; do
+    [[ -r "$hwmon/name" ]] || continue
+    [[ "$(cat "$hwmon/name")" == "k10temp" ]] || continue
+    [[ -r "$hwmon/temp1_input" ]] || continue
+
+    temp_milli="$(cat "$hwmon/temp1_input")"
+    printf ' %s°C\n' "$((temp_milli / 1000))"
+    exit 0
+done
+
+if command -v sensors >/dev/null 2>&1; then
+    sensors k10temp-pci-* 2>/dev/null | awk '/Tctl:/ {gsub(/[+°C]/, "", $2); printf " %.0f°C\n", $2; found=1} END {exit found ? 0 : 1}'
+    exit $?
+fi
+
+printf ' --°C\n'

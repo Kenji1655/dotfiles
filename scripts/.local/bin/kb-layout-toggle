@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+current=$(setxkbmap -query | awk '/layout/{l=$2} /variant/{v=$2} END{if(v) print l"("v")"; else print l}')
+
+case "$1" in
+    toggle)
+        if [[ "$current" == "br(thinkpad)" ]]; then
+            setxkbmap -layout us -variant intl -option terminate:ctrl_alt_bksp
+        else
+            setxkbmap -layout br -variant thinkpad -option terminate:ctrl_alt_bksp
+        fi
+        ;;
+    status|*)
+        if [[ "$current" == "br(thinkpad)" ]]; then
+            printf '⌨ BR\n'
+        else
+            printf '⌨ US\n'
+        fi
+        ;;
+esac

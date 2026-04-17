@@ -1,0 +1,6 @@
+Backup: 20260417-030348
+Kernel: 6.19.11-zen1-1-zen
+Host: 
+
+Pacotes oficiais: 146
+Pacotes AUR: 12

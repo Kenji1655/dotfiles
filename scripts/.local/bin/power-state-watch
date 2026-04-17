@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+lockfile="/tmp/power-state-watch.lock"
+exec 9>"$lockfile"
+flock -n 9 || exit 0
+
+export DISPLAY="${DISPLAY:-:0}"
+export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+
+ac_file="/sys/class/power_supply/AC/online"
+cache_dir="$HOME/.cache/power-state-watch"
+brightness_cache="$cache_dir/ac-brightness"
+mkdir -p "$cache_dir"
+
+read_state() {
+  [[ -r "$ac_file" ]] && cat "$ac_file" || printf '1\n'
+}
+
+set_brightness() {
+  local target="$1"
+  command -v brightnessctl >/dev/null 2>&1 || return 0
+  brightnessctl -d amdgpu_bl1 set "$target" >/dev/null 2>&1 || true
+}
+
+notify_state() {
+  local state="$1"
+
+  if [[ "$state" == "1" ]]; then
+    notify-send -u normal "󰚥 Tomada conectada" "Performance maxima ativa
+Brilho restaurado"
+  else
+    notify-send -u normal "󰁹 Bateria ativa" "Modo autonomia com desempenho
+Brilho reduzido para economizar energia"
+  fi
+}
+
+apply_state() {
+  local state="$1"
+
+  if [[ "$state" == "1" ]]; then
+    if [[ -s "$brightness_cache" ]]; then
+      set_brightness "$(cat "$brightness_cache")"
+    else
+      set_brightness "80%"
+    fi
+  else
+    if command -v brightnessctl >/dev/null 2>&1; then
+      brightnessctl -d amdgpu_bl1 get > "$brightness_cache" 2>/dev/null || true
+    fi
+    set_brightness "45%"
+  fi
+
+  notify_state "$state"
+}
+
+last_state="$(read_state)"
+
+while sleep 2; do
+  current_state="$(read_state)"
+  if [[ "$current_state" != "$last_state" ]]; then
+    last_state="$current_state"
+    apply_state "$current_state"
+  fi
+done
