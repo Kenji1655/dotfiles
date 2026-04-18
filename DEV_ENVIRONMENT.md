@@ -63,7 +63,7 @@ Desktop apps:
 
 - `visual-studio-code-bin`
 - `postman-bin`
-- `insomnia`
+- `insomnia-bin`
 - `figma-linux`
 - `gimp`
 

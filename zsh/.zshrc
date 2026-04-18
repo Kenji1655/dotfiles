@@ -61,3 +61,4 @@ alias ff='fastfetch'
 alias health='system-health'
 
 [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
+[[ -r "$HOME/.config/zsh/dev-tools.zsh" ]] && source "$HOME/.config/zsh/dev-tools.zsh"

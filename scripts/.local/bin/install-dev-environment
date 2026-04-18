@@ -171,7 +171,7 @@ install_desktop_apps() {
   local aur_packages=(
     visual-studio-code-bin
     postman-bin
-    insomnia
+    insomnia-bin
     figma-linux
   )
 
