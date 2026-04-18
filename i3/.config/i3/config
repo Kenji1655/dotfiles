@@ -47,7 +47,7 @@ bindsym $mod+Shift+q kill
 bindsym $mod+Control+r restart
 bindsym $mod+Shift+e exec --no-startup-id ~/.config/rofi/power-menu.sh
 bindsym $mod+Shift+w exec --no-startup-id ~/.local/bin/wallpaper-picker
-bindsym $mod+Shift+f exec --no-startup-id thunar
+bindsym $mod+Shift+f exec --no-startup-id ~/.local/bin/tui-file-manager
 bindsym $mod+slash exec --no-startup-id ~/.local/bin/keybind-cheatsheet
 
 # Focus and movement.
@@ -145,6 +145,7 @@ for_window [class="Nm-connection-editor"] floating enable
 for_window [class="Blueman-manager"] floating enable
 for_window [class="flameshot"] floating enable
 for_window [class="feh"] floating enable
+for_window [class="YAZI"] floating enable, resize set 1200 760, move position center
 
 # Autostart services.
 exec_always --no-startup-id ~/.config/polybar/launch.sh

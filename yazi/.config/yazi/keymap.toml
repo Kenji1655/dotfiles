@@ -1,0 +1,15 @@
+[manager]
+prepend_keymap = [
+  { on = ["g", "h"], run = "cd ~", desc = "GO HOME" },
+  { on = ["g", "d"], run = "cd ~/Downloads", desc = "GO DOWNLOADS" },
+  { on = ["g", "p"], run = "cd ~/Projects", desc = "GO PROJECTS" },
+  { on = ["g", "c"], run = "cd ~/.config", desc = "GO CONFIG" },
+  { on = ["g", "D"], run = "cd ~/.dotfiles", desc = "GO DOTFILES" },
+  { on = ["."], run = "hidden toggle", desc = "TOGGLE HIDDEN FILES" },
+  { on = ["<C-n>"], run = "create", desc = "CREATE FILE OR DIRECTORY" },
+  { on = ["<C-r>"], run = "rename", desc = "RENAME" },
+  { on = ["<C-d>"], run = "remove", desc = "DELETE" },
+  { on = ["<C-y>"], run = "yank", desc = "COPY" },
+  { on = ["<C-x>"], run = "yank --cut", desc = "CUT" },
+  { on = ["<C-p>"], run = "paste", desc = "PASTE" },
+]

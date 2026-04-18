@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+start_dir="${1:-$HOME}"
+
+if ! command -v yazi >/dev/null 2>&1; then
+  notify-send "FILE MANAGER" "Yazi nao esta instalado." 2>/dev/null || true
+  exit 1
+fi
+
+exec alacritty \
+  --class "YAZI,YAZI" \
+  --title "FILE MANAGER" \
+  -o 'window.decorations="None"' \
+  -o 'window.opacity=0.96' \
+  -o 'font.size=12' \
+  -e env EDITOR=nvim VISUAL=nvim yazi "$start_dir"

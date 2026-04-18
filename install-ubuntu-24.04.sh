@@ -74,7 +74,7 @@ install_apt_packages() {
     i3-wm i3status i3lock xss-lock polybar rofi picom dunst alacritty zsh tmux
     feh scrot imagemagick x11-xserver-utils xdotool slop xclip xdg-utils xdg-user-dirs
     brightnessctl playerctl pipewire-pulse pavucontrol network-manager-gnome blueman
-    neovim firefox thunar thunar-archive-plugin thunar-volman tumbler ranger
+    neovim firefox thunar thunar-archive-plugin thunar-volman tumbler ranger yazi
     highlight atool w3m btop fastfetch bat eza fd-find ripgrep fzf git-delta
     fonts-noto fonts-inter fonts-liberation fonts-noto-color-emoji fonts-jetbrains-mono
     papirus-icon-theme lxappearance flameshot autorandr
@@ -264,7 +264,7 @@ backup_package_targets() {
 stow_home() {
   local backup_root="$DOTFILES_DIR/backup/ubuntu-$(date +%Y%m%d-%H%M%S)"
   local packages=(
-    i3 polybar rofi picom dunst alacritty tmux zsh git nvim btop fastfetch ranger
+    i3 polybar rofi picom dunst alacritty tmux zsh git nvim btop fastfetch ranger yazi
     gtk qt profile xresources xsettingsd scripts browser systemd wallpaper portal
   )
 

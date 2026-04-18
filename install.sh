@@ -27,7 +27,7 @@ install_pacman_packages() {
     feh scrot imagemagick i3lock xss-lock xdg-utils xdotool slop
     brightnessctl playerctl pipewire pipewire-pulse pavucontrol
     network-manager-applet blueman neovim firefox thunar thunar-archive-plugin
-    thunar-volman tumbler ranger ueberzug highlight atool w3m btop fastfetch
+    thunar-volman tumbler ranger yazi ueberzug highlight atool w3m btop fastfetch
     bat eza fd ripgrep fzf git-delta noto-fonts inter-font
     ttf-jetbrains-mono-nerd papirus-icon-theme lxappearance flameshot autorandr
     xorg-xrdb xorg-xrandr xclip stow ly tlp tlp-rdw bluez bluez-utils vulkan-radeon
@@ -100,7 +100,7 @@ backup_package_targets() {
 
 stow_home() {
   local backup_root="$DOTFILES_DIR/backup/$(date +%Y%m%d-%H%M%S)"
-  local packages=(i3 polybar rofi picom dunst alacritty tmux zsh git nvim btop fastfetch ranger gtk qt profile xresources xsettingsd scripts browser systemd autorandr wallpaper wireplumber portal)
+  local packages=(i3 polybar rofi picom dunst alacritty tmux zsh git nvim btop fastfetch ranger yazi gtk qt profile xresources xsettingsd scripts browser systemd autorandr wallpaper wireplumber portal)
   for pkg in "${packages[@]}"; do
     backup_package_targets "$pkg" "$HOME" "$backup_root"
     run stow -v -d "$DOTFILES_DIR" -t "$HOME" "$pkg"
