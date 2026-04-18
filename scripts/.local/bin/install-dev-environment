@@ -1,0 +1,301 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DRY_RUN=0
+WITH_DATABASES=0
+WITH_MOBILE=0
+WITH_AI=0
+WITH_DESKTOP_APPS=0
+WITH_SERVICES=0
+WITH_VSCODE_EXTENSIONS=0
+
+usage() {
+  cat <<'EOF'
+Usage: install-dev-environment [options]
+
+Options:
+  --dry-run              Print commands without running them.
+  --databases            Install PostgreSQL, MariaDB/MySQL and MongoDB.
+  --mobile               Install Android/Flutter tooling.
+  --ai                   Install Ollama and LM Studio.
+  --desktop-apps         Install VS Code, Postman, Insomnia, Figma, GIMP, DBeaver.
+  --services             Enable database/Ollama services after install.
+  --vscode-extensions    Install recommended VS Code extensions.
+  --all                  Install every group above, but do not enable services.
+  -h, --help             Show this help.
+
+Recommended first pass:
+  install-dev-environment --desktop-apps --databases --vscode-extensions
+
+Heavy complete pass:
+  install-dev-environment --all --services --vscode-extensions
+EOF
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run) DRY_RUN=1 ;;
+    --databases) WITH_DATABASES=1 ;;
+    --mobile) WITH_MOBILE=1 ;;
+    --ai) WITH_AI=1 ;;
+    --desktop-apps) WITH_DESKTOP_APPS=1 ;;
+    --services) WITH_SERVICES=1 ;;
+    --vscode-extensions) WITH_VSCODE_EXTENSIONS=1 ;;
+    --all)
+      WITH_DATABASES=1
+      WITH_MOBILE=1
+      WITH_AI=1
+      WITH_DESKTOP_APPS=1
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      printf 'Unknown option: %s\n\n' "$arg" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+done
+
+run() {
+  if [[ "$DRY_RUN" == 1 ]]; then
+    printf '[dry-run]'
+    printf ' %q' "$@"
+    printf '\n'
+  else
+    "$@"
+  fi
+}
+
+require_arch() {
+  [[ -f /etc/arch-release ]] || {
+    echo "This script expects Arch Linux."
+    exit 1
+  }
+}
+
+ensure_yay() {
+  command -v yay >/dev/null 2>&1 && return 0
+
+  local build_dir="$HOME/.cache/yay-build"
+  run rm -rf "$build_dir"
+  run git clone https://aur.archlinux.org/yay.git "$build_dir"
+  (
+    cd "$build_dir"
+    run makepkg -si --noconfirm
+  )
+}
+
+install_pacman() {
+  (("$#" == 0)) && return 0
+  run sudo pacman -Syu --needed --noconfirm "$@"
+}
+
+install_aur() {
+  (("$#" == 0)) && return 0
+  ensure_yay
+  run yay -S --needed --noconfirm "$@"
+}
+
+install_base_dev() {
+  local packages=(
+    git git-delta stow
+    base-devel cmake ninja bear clang lldb gdb valgrind
+    nodejs npm nvm pnpm yarn
+    python python-pip python-pipx pyenv mise
+    rust cargo rust-analyzer
+    go
+    jdk21-openjdk maven gradle
+    dotnet-sdk aspnet-runtime mono
+    neovim
+    lazygit yazi zoxide atuin direnv
+    shellcheck shfmt stylua prettier eslint python-black ruff mypy
+    lua-language-server typescript-language-server
+    vscode-css-languageserver vscode-html-languageserver vscode-json-languageserver
+    bash-language-server yaml-language-server taplo-cli
+  )
+
+  install_pacman "${packages[@]}"
+}
+
+install_databases() {
+  local packages=(
+    postgresql
+    mariadb
+    dbeaver
+  )
+  local aur_packages=(
+    mongodb-bin
+    mongodb-compass-bin
+  )
+
+  install_pacman "${packages[@]}"
+  install_aur "${aur_packages[@]}"
+}
+
+install_mobile() {
+  local packages=(
+    android-tools
+    android-udev
+    qemu-full
+    edk2-ovmf
+  )
+  local aur_packages=(
+    android-studio
+    flutter
+  )
+
+  install_pacman "${packages[@]}"
+  install_aur "${aur_packages[@]}"
+}
+
+install_ai() {
+  local packages=(
+    ollama
+  )
+  local aur_packages=(
+    lmstudio-bin
+  )
+
+  install_pacman "${packages[@]}"
+  install_aur "${aur_packages[@]}"
+}
+
+install_desktop_apps() {
+  local packages=(
+    gimp
+    dbeaver
+  )
+  local aur_packages=(
+    visual-studio-code-bin
+    postman-bin
+    insomnia
+    figma-linux
+  )
+
+  install_pacman "${packages[@]}"
+  install_aur "${aur_packages[@]}"
+}
+
+setup_shell_version_managers() {
+  local zshenv="$HOME/.config/zsh/dev-tools.zsh"
+
+  run mkdir -p "$(dirname "$zshenv")"
+  if [[ "$DRY_RUN" == 1 ]]; then
+    echo "[dry-run] write $zshenv"
+  else
+    cat > "$zshenv" <<'EOF'
+# Development toolchain environment
+export NVM_DIR="$HOME/.nvm"
+[[ -s /usr/share/nvm/init-nvm.sh ]] && source /usr/share/nvm/init-nvm.sh
+
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d "$PYENV_ROOT/bin" ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+command -v pyenv >/dev/null 2>&1 && eval "$(pyenv init -)"
+
+command -v mise >/dev/null 2>&1 && eval "$(mise activate zsh)"
+command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init zsh)"
+command -v atuin >/dev/null 2>&1 && eval "$(atuin init zsh)"
+command -v direnv >/dev/null 2>&1 && eval "$(direnv hook zsh)"
+EOF
+  fi
+
+  local zshrc="$HOME/.zshrc"
+  local source_line='[[ -r "$HOME/.config/zsh/dev-tools.zsh" ]] && source "$HOME/.config/zsh/dev-tools.zsh"'
+  if [[ -f "$zshrc" ]] && ! grep -Fq "$source_line" "$zshrc"; then
+    if [[ "$DRY_RUN" == 1 ]]; then
+      echo "[dry-run] append dev-tools source line to $zshrc"
+    else
+      printf '\n%s\n' "$source_line" >> "$zshrc"
+    fi
+  fi
+}
+
+configure_services() {
+  if [[ "$WITH_DATABASES" == 1 ]]; then
+    if [[ ! -d /var/lib/postgres/data/base ]]; then
+      run sudo -iu postgres initdb -D /var/lib/postgres/data
+    fi
+    run sudo systemctl enable postgresql.service
+    if [[ ! -d /var/lib/mysql/mysql ]]; then
+      run sudo mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
+    fi
+    run sudo systemctl enable mariadb.service
+    for service in mongodb.service mongod.service; do
+      if systemctl list-unit-files "$service" >/dev/null 2>&1; then
+        run sudo systemctl enable "$service"
+      fi
+    done
+  fi
+
+  if [[ "$WITH_AI" == 1 ]] && systemctl list-unit-files ollama.service >/dev/null 2>&1; then
+    run sudo systemctl enable ollama.service
+  fi
+}
+
+install_vscode_extensions() {
+  [[ "$DRY_RUN" == 1 ]] || command -v code >/dev/null 2>&1 || {
+    echo "VS Code command 'code' not found; skipping extensions."
+    return 0
+  }
+
+  local extensions=(
+    dbaeumer.vscode-eslint
+    esbenp.prettier-vscode
+    Angular.ng-template
+    bradlc.vscode-tailwindcss
+    ms-vscode.vscode-typescript-next
+    ms-python.python
+    charliermarsh.ruff
+    ms-vscode.cpptools
+    llvm-vs-code-extensions.vscode-clangd
+    rust-lang.rust-analyzer
+    vscjava.vscode-java-pack
+    ms-dotnettools.csharp
+    ms-dotnettools.csdevkit
+    formulahendry.dotnet-test-explorer
+    golang.go
+    redhat.vscode-yaml
+    tamasfe.even-better-toml
+    mongodb.mongodb-vscode
+    cweijan.vscode-postgresql-client2
+  )
+
+  local ext
+  for ext in "${extensions[@]}"; do
+    run code --install-extension "$ext"
+  done
+}
+
+print_next_steps() {
+  cat <<'EOF'
+
+Development environment script finished.
+
+Recommended manual checks:
+- Open a new terminal and run: nvm --version, pyenv --version, mise --version
+- For PostgreSQL first use: sudo systemctl start postgresql.service
+- For MariaDB first use: sudo mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
+- For Ollama first use: sudo systemctl start ollama.service
+- Open Android Studio once to let it install SDK components and emulators.
+
+This script intentionally does not install Docker, Kubernetes or cloud CLIs.
+EOF
+}
+
+main() {
+  require_arch
+  install_base_dev
+  [[ "$WITH_DATABASES" == 1 ]] && install_databases
+  [[ "$WITH_MOBILE" == 1 ]] && install_mobile
+  [[ "$WITH_AI" == 1 ]] && install_ai
+  [[ "$WITH_DESKTOP_APPS" == 1 ]] && install_desktop_apps
+  setup_shell_version_managers
+  [[ "$WITH_SERVICES" == 1 ]] && configure_services
+  [[ "$WITH_VSCODE_EXTENSIONS" == 1 ]] && install_vscode_extensions
+  print_next_steps
+}
+
+main "$@"
