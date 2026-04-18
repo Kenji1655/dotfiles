@@ -1,9 +1,13 @@
 /* Rofi configuration - Gruvbox Dark Hard */
 configuration {
-    modi: "drun,run,window";
+    modes: "drun,run,window";
     show-icons: true;
     icon-theme: "Papirus-Dark";
     font: "JetBrainsMono Nerd Font 11";
+    matching: "fuzzy";
+    sorting-method: "fzf";
+    sort: true;
+    drun-match-fields: "name,generic,keywords";
     drun-display-format: "{name}";
     display-drun: "Apps";
     display-run: "Run";
