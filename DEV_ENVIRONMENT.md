@@ -55,7 +55,7 @@ Databases:
 
 - `postgresql`
 - `mariadb`
-- `mongodb-bin`
+- `mongodb70-bin`
 - `mongodb-compass-bin`
 - `dbeaver`
 
