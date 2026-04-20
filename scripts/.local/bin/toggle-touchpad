@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Toggle the Synaptics touchpad on/off (X11 + libinput).
+set -euo pipefail
+
+device="SYNA8020:00 06CB:CE5C Touchpad"
+
+state=$(xinput list-props "$device" | awk -F: '/Device Enabled/ {gsub(/[ \t]/, "", $2); print $2; exit}')
+
+if [[ "$state" == "1" ]]; then
+  xinput disable "$device"
+  msg="Touchpad OFF"
+else
+  xinput enable "$device"
+  msg="Touchpad ON"
+fi
+
+if command -v dunstify >/dev/null; then
+  dunstify -r 9911 -t 1500 -a touchpad "$msg"
+elif command -v notify-send >/dev/null; then
+  notify-send -r 9911 -t 1500 -a touchpad "$msg"
+fi

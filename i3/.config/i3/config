@@ -136,6 +136,7 @@ bindsym XF86AudioPlay exec --no-startup-id playerctl play-pause
 bindsym XF86AudioNext exec --no-startup-id playerctl next
 bindsym XF86AudioPrev exec --no-startup-id playerctl previous
 bindsym XF86Display exec --no-startup-id arandr
+bindsym $mod+Shift+p exec --no-startup-id ~/.local/bin/toggle-touchpad
 
 # Floating rules.
 for_window [class="Pavucontrol"] floating enable
@@ -159,5 +160,6 @@ exec_always --no-startup-id sh -c "pgrep -f /usr/bin/blueman-applet >/dev/null |
 exec_always --no-startup-id sh -c "pgrep -f /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 >/dev/null || /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
 exec_always --no-startup-id sh -c "[ -x ~/.fehbg ] && ~/.fehbg || feh --bg-fill ~/.config/wallpaper/wall.png"
 exec_always --no-startup-id sh -c "pgrep -x autotiling-rs >/dev/null || autotiling-rs"
+exec --no-startup-id xinput disable "SYNA8020:00 06CB:CE5C Touchpad"
 exec --no-startup-id xss-lock --transfer-sleep-lock -- ~/.local/bin/i3lock-blur
 exec --no-startup-id xidlehook --not-when-fullscreen --not-when-audio --timer 300 '~/.local/bin/i3lock-blur' '' --timer 600 'xset dpms force off' ''
