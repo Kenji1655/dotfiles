@@ -104,8 +104,23 @@ for unit in NetworkManager.service bluetooth.service tlp.service lm_sensors.serv
   check_service "$unit"
 done
 
+fstrim_enabled="$(systemctl is-enabled fstrim.timer 2>/dev/null || true)"
+fstrim_active="$(systemctl is-active fstrim.timer 2>/dev/null || true)"
+if [[ "$fstrim_enabled" == "enabled" && "$fstrim_active" == "active" ]]; then
+  print_status ok "fstrim.timer" "$fstrim_active / $fstrim_enabled"
+else
+  print_status warn "fstrim.timer" "${fstrim_active:-unknown} / ${fstrim_enabled:-unknown}"
+fi
+
+nm_wait_enabled="$(systemctl is-enabled NetworkManager-wait-online.service 2>/dev/null || true)"
+if [[ "$nm_wait_enabled" == "disabled" ]]; then
+  print_status ok "NM wait online" "disabled"
+else
+  print_status warn "NM wait online" "${nm_wait_enabled:-unknown}"
+fi
+
 printf "\n== User Services ==\n"
-for unit in pipewire.service pipewire-pulse.service wireplumber.service xdg-desktop-portal.service xsettingsd.service; do
+for unit in pipewire.service pipewire-pulse.service wireplumber.service xdg-desktop-portal.service xsettingsd.service dotfiles-maintenance.timer; do
   check_user_service "$unit"
 done
 

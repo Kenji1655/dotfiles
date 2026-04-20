@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+log_dir="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles"
+log_file="$log_dir/maintenance.log"
+mkdir -p "$log_dir"
+
+log() {
+  printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" | tee -a "$log_file"
+}
+
+run_cmd() {
+  log "$*"
+  "$@" 2>&1 | tee -a "$log_file"
+}
+
+clean_user_cache() {
+  log "Cleaning user build caches"
+  rm -rf "$HOME/.cache/yay"/* "$HOME/.cache/yay-build"/* "$HOME/.cache/go-build"/* 2>/dev/null || true
+}
+
+clean_pacman_cache() {
+  if ! command -v paccache >/dev/null 2>&1; then
+    log "paccache not installed"
+    return 0
+  fi
+
+  if [[ "$(id -u)" == 0 ]]; then
+    run_cmd paccache -rk2
+    run_cmd paccache -ruk0
+  else
+    run_cmd sudo paccache -rk2
+    run_cmd sudo paccache -ruk0
+  fi
+}
+
+remove_debug_orphans() {
+  local candidates=(
+    displaylink-debug
+    evdi-dkms-debug
+    flutter-debug
+    insomnia-bin-debug
+    mongosh-bin-debug
+  )
+  local installed=()
+  local pkg
+
+  for pkg in "${candidates[@]}"; do
+    pacman -Q "$pkg" >/dev/null 2>&1 && installed+=("$pkg")
+  done
+
+  if ((${#installed[@]} == 0)); then
+    log "No debug orphan packages installed"
+    return 0
+  fi
+
+  if [[ "$(id -u)" == 0 ]]; then
+    run_cmd pacman -Rns --noconfirm "${installed[@]}"
+  else
+    run_cmd sudo pacman -Rns --noconfirm "${installed[@]}"
+  fi
+}
+
+report_orphans() {
+  log "Remaining orphan packages"
+  pacman -Qtd 2>/dev/null | tee -a "$log_file" || true
+}
+
+main() {
+  local action="${1:-all}"
+
+  case "$action" in
+    all)
+      clean_user_cache
+      clean_pacman_cache
+      remove_debug_orphans
+      report_orphans
+      ;;
+    user-cache) clean_user_cache ;;
+    pacman-cache) clean_pacman_cache ;;
+    debug-orphans) remove_debug_orphans ;;
+    report) report_orphans ;;
+    *)
+      printf 'Usage: %s [all|user-cache|pacman-cache|debug-orphans|report]\n' "$(basename "$0")" >&2
+      exit 2
+      ;;
+  esac
+}
+
+main "$@"

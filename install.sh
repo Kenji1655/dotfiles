@@ -154,8 +154,10 @@ install_grub_theme() {
 
 enable_services() {
   run sudo systemctl enable NetworkManager.service
+  run sudo systemctl disable NetworkManager-wait-online.service || true
   run sudo systemctl enable bluetooth.service
   run sudo systemctl enable tlp.service
+  run sudo systemctl enable fstrim.timer
   run sudo systemctl enable lm_sensors.service
   run sudo systemctl enable thinkfan.service thinkfan-sleep.service thinkfan-wakeup.service
   if systemctl list-unit-files displaylink.service >/dev/null 2>&1; then
@@ -173,6 +175,10 @@ enable_user_services() {
   if [[ -f "$HOME/.config/systemd/user/xsettingsd.service" ]]; then
     run systemctl --user daemon-reload
     run systemctl --user enable --now xsettingsd.service || true
+  fi
+  if [[ -f "$HOME/.config/systemd/user/dotfiles-maintenance.timer" ]]; then
+    run systemctl --user daemon-reload
+    run systemctl --user enable --now dotfiles-maintenance.timer || true
   fi
 }
 

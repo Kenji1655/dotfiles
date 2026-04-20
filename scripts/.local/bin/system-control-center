@@ -25,6 +25,7 @@ choices=$(
 Wallpaper
 Power Menu
 Energy Profile
+Dev Services
 Monitor Profiles
 Audio Output
 Bluetooth
@@ -36,6 +37,7 @@ File Manager
 Presentation Mode
 System Health
 Boot Analysis
+System Maintenance
 Apply Gruvbox Theme
 Backup Dotfiles
 Secret Scan
@@ -52,6 +54,7 @@ case "$choice" in
   Wallpaper) wallpaper-picker ;;
   "Power Menu") "$HOME/.config/rofi/power-menu.sh" ;;
   "Energy Profile") power-profile-indicator menu ;;
+  "Dev Services") dev-services-manager ;;
   "Monitor Profiles") monitor-manager menu ;;
   "Audio Output") audio-switcher ;;
   Bluetooth) blueman-manager ;;
@@ -63,6 +66,7 @@ case "$choice" in
   "Presentation Mode") presentation-mode toggle ;;
   "System Health") run_terminal "SYSTEM HEALTH" 'system-health' ;;
   "Boot Analysis") run_terminal "BOOT ANALYSIS" 'boot-analysis' ;;
+  "System Maintenance") run_terminal "SYSTEM MAINTENANCE" 'system-maintenance all' ;;
   "Apply Gruvbox Theme") apply-theme gruvbox ;;
   "Backup Dotfiles") run_terminal "BACKUP DOTFILES" 'backup-dotfiles' ;;
   "Secret Scan") run_terminal "SECRET SCAN" 'dotfiles-secret-scan' ;;

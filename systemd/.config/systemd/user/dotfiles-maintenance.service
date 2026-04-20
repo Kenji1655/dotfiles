@@ -1,0 +1,6 @@
+[Unit]
+Description=Dotfiles user cache maintenance
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/system-maintenance user-cache
