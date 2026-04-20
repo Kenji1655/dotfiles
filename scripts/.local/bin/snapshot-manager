@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+reason="${*:-manual dotfiles checkpoint}"
+timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
+comment="dotfiles: $reason ($timestamp)"
+
+if command -v timeshift >/dev/null 2>&1; then
+  exec sudo timeshift --create --comments "$comment"
+fi
+
+if command -v snapper >/dev/null 2>&1; then
+  exec sudo snapper create --description "$comment"
+fi
+
+printf 'No snapshot tool found. Install timeshift or snapper.\n' >&2
+exit 1

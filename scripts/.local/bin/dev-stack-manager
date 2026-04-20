@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export DISPLAY="${DISPLAY:-:0}"
+export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+
+run_terminal() {
+  local title="$1"
+  local command="$2"
+  env TERMINAL_TITLE="$title" TERMINAL_COMMAND="$command" alacritty --title "$title" -e bash -lc '
+    export PATH="$HOME/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+    clear
+    printf "\033[1;33m%s\033[0m\n\n" "$TERMINAL_TITLE"
+    eval "$TERMINAL_COMMAND"
+    status=$?
+    printf "\n\033[2mStatus: %s\033[0m\n" "$status"
+    printf "Pressione Enter para fechar..."
+    read -r _
+    exit "$status"
+  '
+}
+
+check_cmd='
+for cmd in node npm nvm python pyenv mise java javac rustc cargo go gcc g++ dotnet nvim code; do
+  printf "%-12s" "$cmd"
+  command -v "$cmd" || true
+done
+'
+
+choice="$(printf 'Check all\nNode setup notes\nPython setup notes\nRust setup notes\nJava setup notes\nDotnet setup notes\nMobile setup notes\n' | rofi -dmenu -p 'Dev Stack')"
+
+case "$choice" in
+  "Check all") run_terminal "DEV STACK CHECK" "$check_cmd" ;;
+  "Node setup notes") run_terminal "NODE DEV" 'printf "Use nvm:\n  nvm install --lts\n  nvm use --lts\n\nThen validate:\n  node -v\n  npm -v\n"' ;;
+  "Python setup notes") run_terminal "PYTHON DEV" 'printf "Use pyenv:\n  pyenv install 3.13\n  pyenv global 3.13\n\nUse uv/pipx per project when needed.\n"' ;;
+  "Rust setup notes") run_terminal "RUST DEV" 'printf "Use rustup:\n  rustup update\n  rustc -V\n  cargo -V\n"' ;;
+  "Java setup notes") run_terminal "JAVA DEV" 'printf "Use mise/sdkman/asdf or distro JDK.\nValidate:\n  java -version\n  javac -version\n"' ;;
+  "Dotnet setup notes") run_terminal "DOTNET DEV" 'printf "Validate:\n  dotnet --info\n\nInstall SDKs per project target.\n"' ;;
+  "Mobile setup notes") run_terminal "MOBILE DEV" 'printf "Validate Android Studio/Flutter:\n  flutter doctor\n  adb version\n\nKeep SDKs outside dotfiles.\n"' ;;
+  ""|*) exit 0 ;;
+esac

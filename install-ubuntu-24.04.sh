@@ -81,7 +81,7 @@ install_apt_packages() {
     gvfs gvfs-backends policykit-1-gnome trash-cli file-roller zip p7zip-full unrar
     ffmpeg ffmpegthumbnailer libpoppler-glib8 libnotify-bin lm-sensors
     qt5ct qt6ct qt5-style-kvantum qt5-style-kvantum-themes xsettingsd
-    python3-pip python3-pipx ufw
+    python3-pip python3-pipx ufw lynis restic borgbackup podman docker.io
     zsh-autosuggestions zsh-syntax-highlighting
   )
 

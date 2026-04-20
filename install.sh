@@ -36,7 +36,7 @@ install_pacman_packages() {
     gvfs gvfs-mtp gvfs-gphoto2 polkit-gnome trash-cli file-roller zip unzip
     7zip unrar ffmpegthumbnailer poppler-glib xdg-user-dirs noto-fonts-emoji
     ttf-liberation man-db man-pages reflector pacman-contrib qt5ct qt6ct kvantum
-    xsettingsd dkms linux-zen-headers ufw
+    xsettingsd dkms linux-zen-headers ufw arch-audit lynis restic borg podman docker
   )
   run sudo pacman -Syu --needed --noconfirm "${packages[@]}"
 }
@@ -51,7 +51,7 @@ ensure_yay() {
 
 install_aur_packages() {
   ensure_yay || return 0
-  run yay -S --needed --noconfirm xidlehook bibata-cursor-theme gruvbox-dark-gtk zsh-theme-powerlevel10k-git thinkfan zen-browser-bin displaylink evdi-dkms
+  run yay -S --needed --noconfirm xidlehook bibata-cursor-theme gruvbox-dark-gtk zsh-theme-powerlevel10k-git thinkfan zen-browser-bin displaylink evdi-dkms timeshift
 }
 
 clone_if_missing() {

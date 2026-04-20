@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export DISPLAY="${DISPLAY:-:0}"
+export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+
+engine="${DEV_DB_ENGINE:-$(command -v podman >/dev/null 2>&1 && printf podman || printf docker)}"
+data_root="${XDG_DATA_HOME:-$HOME/.local/share}/dev-db"
+mkdir -p "$data_root"
+
+usage() {
+  cat <<'EOF'
+Usage: dev-db <postgres|mongo|mysql> <start|stop|status|logs>
+
+Uses podman when available, otherwise docker.
+EOF
+}
+
+db="${1:-}"
+action="${2:-}"
+if [[ "$db" == "-h" || "$db" == "--help" ]]; then
+  usage
+  exit 0
+fi
+
+if [[ -z "$db" || -z "$action" ]]; then
+  if command -v rofi >/dev/null 2>&1 && [[ -n "${DISPLAY:-}" ]]; then
+    choice="$(printf 'postgres start\npostgres stop\npostgres status\nmongo start\nmongo stop\nmongo status\nmysql start\nmysql stop\nmysql status\n' | rofi -dmenu -p 'Dev DB')"
+    [[ -n "$choice" ]] || exit 0
+    db="${choice%% *}"
+    action="${choice#* }"
+  else
+    usage
+    exit 2
+  fi
+fi
+command -v "$engine" >/dev/null 2>&1 || { printf '%s is not installed.\n' "$engine" >&2; exit 1; }
+
+case "$db" in
+  postgres)
+    name=dev-postgres
+    image=postgres:16
+    args=(-e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres -e POSTGRES_DB=app -p 5432:5432 -v "$data_root/postgres:/var/lib/postgresql/data")
+    ;;
+  mongo)
+    name=dev-mongo
+    image=mongo:7
+    args=(-p 27017:27017 -v "$data_root/mongo:/data/db")
+    ;;
+  mysql)
+    name=dev-mysql
+    image=mysql:8
+    args=(-e MYSQL_ROOT_PASSWORD=mysql -e MYSQL_DATABASE=app -p 3306:3306 -v "$data_root/mysql:/var/lib/mysql")
+    ;;
+  *)
+    usage
+    exit 2
+    ;;
+esac
+
+case "$action" in
+  start)
+    if "$engine" container exists "$name" 2>/dev/null; then
+      "$engine" start "$name"
+    else
+      "$engine" run -d --name "$name" "${args[@]}" "$image"
+    fi
+    ;;
+  stop) "$engine" stop "$name" ;;
+  status) "$engine" ps -a --filter "name=$name" ;;
+  logs) "$engine" logs -f "$name" ;;
+  *) usage; exit 2 ;;
+esac

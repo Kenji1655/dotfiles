@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo="${1:-}"
+dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
+
+if [[ -z "$repo" ]]; then
+  cat <<'EOF'
+Usage: github-remote-setup <git@github.com:user/repo.git>
+
+Example:
+  github-remote-setup git@github.com:kenji/dotfiles.git
+EOF
+  exit 0
+fi
+
+if git -C "$dotfiles" remote get-url origin >/dev/null 2>&1; then
+  git -C "$dotfiles" remote set-url origin "$repo"
+else
+  git -C "$dotfiles" remote add origin "$repo"
+fi
+
+git -C "$dotfiles" remote -v

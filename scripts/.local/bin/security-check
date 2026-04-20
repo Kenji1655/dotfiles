@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+ok=$'\033[32mOK\033[0m'
+warn=$'\033[33mWARN\033[0m'
+fail=$'\033[31mFAIL\033[0m'
+
+line() {
+  printf '%b    %-22s %s\n' "$1" "$2" "${3:-}"
+}
+
+printf 'SECURITY CHECK\n\n'
+
+if command -v ufw >/dev/null 2>&1; then
+  ufw_status="$(sudo -n ufw status 2>/dev/null || true)"
+  ufw_service="$(systemctl is-active ufw.service 2>/dev/null || true)"
+  if printf '%s\n' "$ufw_status" | grep -qi 'Status: active' || [[ "$ufw_service" == "active" ]]; then
+    line "$ok" "ufw" "active"
+  else
+    line "$warn" "ufw" "inactive"
+  fi
+else
+  line "$warn" "ufw" "not installed"
+fi
+
+if systemctl is-active --quiet sshd.service 2>/dev/null; then
+  line "$warn" "sshd" "active"
+else
+  line "$ok" "sshd" "not active"
+fi
+
+printf '\n== Listening Ports ==\n'
+if command -v ss >/dev/null 2>&1; then
+  ss -tulpn 2>/dev/null | sed -n '1,30p'
+else
+  line "$warn" "ss" "not installed"
+fi
+
+printf '\n== Arch Audit ==\n'
+if command -v arch-audit >/dev/null 2>&1; then
+  arch-audit 2>/dev/null || true
+else
+  line "$warn" "arch-audit" "not installed"
+fi
+
+printf '\n== Lynis ==\n'
+if command -v lynis >/dev/null 2>&1; then
+  printf 'Run manually for full audit: sudo lynis audit system\n'
+else
+  line "$warn" "lynis" "not installed"
+fi

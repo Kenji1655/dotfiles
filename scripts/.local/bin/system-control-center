@@ -1,7 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-style='window {width: 420px; border: 2px; border-color: #fbf1c7; border-radius: 8px; background-color: #1d2021f2;} listview {lines: 14;} element {padding: 9px 12px;} element selected {background-color: #3c3836; text-color: #fbf1c7;} entry {placeholder: "System";}'
+export DISPLAY="${DISPLAY:-:0}"
+export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+
+style='
+window {
+  width: 560px;
+  border: 2px;
+  border-color: #fbf1c7;
+  border-radius: 8px;
+  background-color: #1d2021f7;
+}
+mainbox { padding: 12px; spacing: 10px; }
+inputbar { padding: 10px; border: 1px; border-color: #504945; border-radius: 8px; background-color: #282828; }
+prompt { text-color: #fabd2f; font: "JetBrainsMono Nerd Font Bold 11"; }
+entry { placeholder: "Search"; text-color: #fbf1c7; }
+listview { lines: 11; spacing: 6px; }
+element { padding: 10px 12px; border-radius: 8px; text-color: #ebdbb2; }
+element selected { background-color: #3c3836; text-color: #fbf1c7; }
+'
 
 run_terminal() {
   local title="$1"
@@ -20,58 +38,178 @@ run_terminal() {
   '
 }
 
-choices=$(
-  cat <<'EOF'
-Wallpaper
-Power Menu
-Energy Profile
-Dev Services
-Monitor Profiles
-Audio Output
-Bluetooth
-Wi-Fi
-Notifications
-Screenshot Area
-Screen Recording
-File Manager
-Presentation Mode
-System Health
-Boot Analysis
-System Maintenance
-Apply Gruvbox Theme
-Backup Dotfiles
-Secret Scan
-Security Baseline
-Edit Dotfiles
-Reload i3
-Restart Polybar
-EOF
-)
+menu() {
+  local prompt="$1"
+  shift
+  printf '%s\n' "$@" | rofi -dmenu -i -p "$prompt" -theme-str "$style"
+}
 
-choice="$(printf '%s\n' "$choices" | rofi -dmenu -p "Control Center" -theme-str "$style")"
+main_menu() {
+  menu "Control Center" \
+    "System" \
+    "Development" \
+    "Display" \
+    "Audio" \
+    "Power" \
+    "Appearance" \
+    "Maintenance" \
+    "Security" \
+    "Dotfiles" \
+    "Reload i3" \
+    "Restart Polybar"
+}
 
-case "$choice" in
-  Wallpaper) wallpaper-picker ;;
-  "Power Menu") "$HOME/.config/rofi/power-menu.sh" ;;
-  "Energy Profile") power-profile-indicator menu ;;
-  "Dev Services") dev-services-manager ;;
-  "Monitor Profiles") monitor-manager menu ;;
-  "Audio Output") audio-switcher ;;
-  Bluetooth) blueman-manager ;;
-  Wi-Fi) nm-connection-editor ;;
-  Notifications) dunst-notifications menu ;;
-  "Screenshot Area") flameshot gui ;;
-  "Screen Recording") screen-recorder menu ;;
-  "File Manager") tui-file-manager ;;
-  "Presentation Mode") presentation-mode toggle ;;
-  "System Health") run_terminal "SYSTEM HEALTH" 'system-health' ;;
-  "Boot Analysis") run_terminal "BOOT ANALYSIS" 'boot-analysis' ;;
-  "System Maintenance") run_terminal "SYSTEM MAINTENANCE" 'system-maintenance all' ;;
-  "Apply Gruvbox Theme") apply-theme gruvbox ;;
-  "Backup Dotfiles") run_terminal "BACKUP DOTFILES" 'backup-dotfiles' ;;
-  "Secret Scan") run_terminal "SECRET SCAN" 'dotfiles-secret-scan' ;;
-  "Security Baseline") run_terminal "SECURITY BASELINE" 'security-baseline' ;;
-  "Edit Dotfiles") alacritty --title "DOTFILES" -e nvim "$HOME/.dotfiles" ;;
+system_menu() {
+  case "$(menu "System" \
+    "System Health" \
+    "Boot Analysis" \
+    "Dock Health" \
+    "System Modes" \
+    "Presentation Mode" \
+    "File Manager" \
+    "Keybind Cheatsheet")" in
+    "System Health") run_terminal "SYSTEM HEALTH" 'system-health' ;;
+    "Boot Analysis") run_terminal "BOOT ANALYSIS" 'boot-analysis' ;;
+    "Dock Health") run_terminal "DOCK HEALTH" 'dock-health' ;;
+    "System Modes") run_terminal "SYSTEM MODE" 'system-mode menu' ;;
+    "Presentation Mode") presentation-mode toggle ;;
+    "File Manager") tui-file-manager ;;
+    "Keybind Cheatsheet") keybind-cheatsheet ;;
+  esac
+}
+
+development_menu() {
+  case "$(menu "Development" \
+    "Dev Services" \
+    "Dev Stack" \
+    "Dev DB Containers" \
+    "Open LazyVim" \
+    "Open VS Code")" in
+    "Dev Services") dev-services-manager ;;
+    "Dev Stack") dev-stack-manager ;;
+    "Dev DB Containers") run_terminal "DEV DB" 'dev-db' ;;
+    "Open LazyVim") alacritty --title "LAZYVIM" -e nvim ;;
+    "Open VS Code") code "$HOME" >/dev/null 2>&1 & ;;
+  esac
+}
+
+display_menu() {
+  case "$(menu "Display" \
+    "Monitor Profiles" \
+    "Wallpaper" \
+    "Screenshot Area" \
+    "Screen Recording" \
+    "Restart Polybar")" in
+    "Monitor Profiles") monitor-manager menu ;;
+    "Wallpaper") wallpaper-picker ;;
+    "Screenshot Area") flameshot gui ;;
+    "Screen Recording") screen-recorder menu ;;
+    "Restart Polybar") "$HOME/.config/polybar/launch.sh" ;;
+  esac
+}
+
+audio_menu() {
+  case "$(menu "Audio" \
+    "Audio Output" \
+    "Bluetooth" \
+    "PulseAudio Volume")" in
+    "Audio Output") audio-switcher ;;
+    "Bluetooth") blueman-manager ;;
+    "PulseAudio Volume") pavucontrol >/dev/null 2>&1 & ;;
+  esac
+}
+
+power_menu() {
+  case "$(menu "Power" \
+    "Energy Profile" \
+    "Power Menu" \
+    "Battery Mode" \
+    "Dock Mode" \
+    "Dev Mode" \
+    "Focus Mode")" in
+    "Energy Profile") power-profile-indicator menu ;;
+    "Power Menu") "$HOME/.config/rofi/power-menu.sh" ;;
+    "Battery Mode") run_terminal "BATTERY MODE" 'system-mode battery' ;;
+    "Dock Mode") run_terminal "DOCK MODE" 'system-mode dock' ;;
+    "Dev Mode") run_terminal "DEV MODE" 'system-mode dev' ;;
+    "Focus Mode") system-mode focus ;;
+  esac
+}
+
+appearance_menu() {
+  case "$(menu "Appearance" \
+    "Apply Gruvbox Theme" \
+    "Wallpaper" \
+    "Edit Rofi Config" \
+    "Edit i3 Config")" in
+    "Apply Gruvbox Theme") apply-theme gruvbox ;;
+    "Wallpaper") wallpaper-picker ;;
+    "Edit Rofi Config") alacritty --title "ROFI CONFIG" -e nvim "$HOME/.config/rofi" ;;
+    "Edit i3 Config") alacritty --title "I3 CONFIG" -e nvim "$HOME/.config/i3/config" ;;
+  esac
+}
+
+maintenance_menu() {
+  case "$(menu "Maintenance" \
+    "System Maintenance" \
+    "Clean User Cache" \
+    "Clean Pacman Cache" \
+    "Show Orphans" \
+    "Remove Debug Orphans" \
+    "Create Snapshot" \
+    "Backup Dotfiles" \
+    "Real Backup")" in
+    "System Maintenance") run_terminal "SYSTEM MAINTENANCE" 'system-maintenance all' ;;
+    "Clean User Cache") run_terminal "CLEAN USER CACHE" 'system-maintenance user-cache' ;;
+    "Clean Pacman Cache") run_terminal "CLEAN PACMAN CACHE" 'system-maintenance pacman-cache' ;;
+    "Show Orphans") run_terminal "ORPHAN PACKAGES" 'system-maintenance report' ;;
+    "Remove Debug Orphans") run_terminal "DEBUG ORPHANS" 'system-maintenance debug-orphans' ;;
+    "Create Snapshot") run_terminal "SNAPSHOT" 'snapshot-manager "manual control center snapshot"' ;;
+    "Backup Dotfiles") run_terminal "BACKUP DOTFILES" 'backup-dotfiles' ;;
+    "Real Backup") run_terminal "REAL BACKUP" 'backup-real' ;;
+  esac
+}
+
+security_menu() {
+  case "$(menu "Security" \
+    "Security Check" \
+    "Security Baseline" \
+    "Secret Scan" \
+    "Listening Ports")" in
+    "Security Check") run_terminal "SECURITY CHECK" 'security-check' ;;
+    "Security Baseline") run_terminal "SECURITY BASELINE" 'security-baseline' ;;
+    "Secret Scan") run_terminal "SECRET SCAN" 'dotfiles-secret-scan' ;;
+    "Listening Ports") run_terminal "LISTENING PORTS" 'ss -tulpn' ;;
+  esac
+}
+
+dotfiles_menu() {
+  case "$(menu "Dotfiles" \
+    "Edit Dotfiles" \
+    "Git Status" \
+    "GitHub Remote Help" \
+    "Backup Dotfiles" \
+    "Secret Scan" \
+    "Open Recovery Guide")" in
+    "Edit Dotfiles") alacritty --title "DOTFILES" -e nvim "$HOME/.dotfiles" ;;
+    "Git Status") run_terminal "DOTFILES GIT" 'git -C "$HOME/.dotfiles" status --short --branch; git -C "$HOME/.dotfiles" log --oneline -8' ;;
+    "GitHub Remote Help") run_terminal "GITHUB REMOTE" 'github-remote-setup' ;;
+    "Backup Dotfiles") run_terminal "BACKUP DOTFILES" 'backup-dotfiles' ;;
+    "Secret Scan") run_terminal "SECRET SCAN" 'dotfiles-secret-scan' ;;
+    "Open Recovery Guide") alacritty --title "RECOVERY" -e nvim "$HOME/.dotfiles/RECOVERY.md" ;;
+  esac
+}
+
+case "$(main_menu)" in
+  System) system_menu ;;
+  Development) development_menu ;;
+  Display) display_menu ;;
+  Audio) audio_menu ;;
+  Power) power_menu ;;
+  Appearance) appearance_menu ;;
+  Maintenance) maintenance_menu ;;
+  Security) security_menu ;;
+  Dotfiles) dotfiles_menu ;;
   "Reload i3") i3-msg reload ;;
   "Restart Polybar") "$HOME/.config/polybar/launch.sh" ;;
   ""|*) exit 0 ;;

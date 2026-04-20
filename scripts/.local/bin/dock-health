@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+export DISPLAY="${DISPLAY:-:0}"
+export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+
+ok=$'\033[32mOK\033[0m'
+warn=$'\033[33mWARN\033[0m'
+fail=$'\033[31mFAIL\033[0m'
+
+status_line() {
+  printf '%b    %-24s %s\n' "$1" "$2" "${3:-}"
+}
+
+printf 'DOCK HEALTH\n\n'
+
+if systemctl is-active --quiet displaylink.service 2>/dev/null; then
+  status_line "$ok" "displaylink.service" "active"
+else
+  state="$(systemctl is-active displaylink.service 2>/dev/null || true)"
+  status_line "$fail" "displaylink.service" "${state:-unknown}"
+fi
+
+if lsmod 2>/dev/null | awk '{print $1}' | grep -qx evdi; then
+  status_line "$ok" "evdi module" "loaded"
+else
+  status_line "$warn" "evdi module" "not loaded"
+fi
+
+if pgrep -f '/usr/lib/displaylink/DisplayLinkManager' >/dev/null 2>&1; then
+  cpu="$(ps -p "$(pgrep -f '/usr/lib/displaylink/DisplayLinkManager' | head -n 1)" -o %cpu= 2>/dev/null | awk '{sum += $1} END {printf "%.1f%%", sum + 0}')"
+  status_line "$ok" "DisplayLinkManager" "running / CPU $cpu"
+else
+  status_line "$fail" "DisplayLinkManager" "not running"
+fi
+
+printf '\n== Monitors ==\n'
+if command -v xrandr >/dev/null 2>&1 && [[ -n "${DISPLAY:-}" ]]; then
+  xrandr --query 2>/dev/null | awk '
+    / connected/ {
+      mode = "unknown";
+      for (i = 1; i <= NF; i++) {
+        if ($i ~ /^[0-9]+x[0-9]+\+/) mode = $i;
+      }
+      print "connected  " $1 "  " mode;
+    }'
+else
+  status_line "$warn" "xrandr" "DISPLAY unavailable"
+fi
+
+printf '\n== Autorandr ==\n'
+if command -v autorandr >/dev/null 2>&1; then
+  autorandr --current 2>/dev/null || true
+  autorandr --list 2>/dev/null | sed 's/^/profile    /'
+else
+  status_line "$warn" "autorandr" "not installed"
+fi
+
+printf '\n== Polybar ==\n'
+pgrep -a polybar 2>/dev/null || status_line "$warn" "polybar" "not running"
+
+printf '\n== Recent DisplayLink Logs ==\n'
+journalctl -u displaylink.service -b --no-pager -n 25 2>/dev/null || true

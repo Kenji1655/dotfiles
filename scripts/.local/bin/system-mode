@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export DISPLAY="${DISPLAY:-:0}"
+export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+
+mode="${1:-menu}"
+
+notify() {
+  notify-send "System Mode" "$1" 2>/dev/null || true
+}
+
+set_power() {
+  command -v powerprofilesctl >/dev/null 2>&1 && powerprofilesctl set "$1" 2>/dev/null || true
+}
+
+restart_polybar() {
+  [[ -x "$HOME/.config/polybar/launch.sh" ]] && "$HOME/.config/polybar/launch.sh" >/dev/null 2>&1 || true
+}
+
+case "$mode" in
+  menu)
+    choice="$(printf 'Work\nBattery\nDock\nFocus\nDev\nNormal\n' | rofi -dmenu -p 'System Mode')"
+    [[ -n "$choice" ]] && exec "$0" "$(tr '[:upper:]' '[:lower:]' <<<"$choice")"
+    ;;
+  work)
+    set_power balanced
+    dunstctl set-paused false 2>/dev/null || true
+    notify "Work mode active"
+    ;;
+  battery)
+    set_power power-saver
+    brightnessctl set 35% 2>/dev/null || true
+    sudo systemctl stop postgresql.service mariadb.service mongodb.service ollama.service 2>/dev/null || true
+    notify "Battery mode active"
+    ;;
+  dock)
+    set_power performance
+    monitor-manager detect 2>/dev/null || true
+    restart_polybar
+    notify "Dock mode active"
+    ;;
+  focus)
+    set_power balanced
+    dunstctl set-paused true 2>/dev/null || true
+    notify "Focus mode active"
+    ;;
+  dev)
+    set_power performance
+    sudo systemctl start postgresql.service mariadb.service mongodb.service ollama.service 2>/dev/null || true
+    notify "Dev mode active"
+    ;;
+  normal)
+    set_power balanced
+    dunstctl set-paused false 2>/dev/null || true
+    notify "Normal mode active"
+    ;;
+  *)
+    printf 'Usage: %s [menu|work|battery|dock|focus|dev|normal]\n' "$(basename "$0")" >&2
+    exit 2
+    ;;
+esac

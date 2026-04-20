@@ -19,7 +19,7 @@ Options:
   --mobile               Install Android/Flutter tooling.
   --ai                   Install Ollama and LM Studio.
   --desktop-apps         Install VS Code, Postman, Insomnia, Figma, GIMP, DBeaver.
-  --services             Enable database/Ollama services after install.
+  --services             Initialize database/Ollama services, but keep them on demand.
   --vscode-extensions    Install recommended VS Code extensions.
   --all                  Install every group above, but do not enable services.
   -h, --help             Show this help.
@@ -115,6 +115,7 @@ install_base_dev() {
     lua-language-server typescript-language-server
     vscode-css-languageserver vscode-html-languageserver vscode-json-languageserver
     bash-language-server yaml-language-server taplo-cli
+    podman docker docker-compose
   )
 
   install_pacman "${packages[@]}"
@@ -218,20 +219,20 @@ configure_services() {
     if [[ ! -d /var/lib/postgres/data/base ]]; then
       run sudo -iu postgres initdb -D /var/lib/postgres/data
     fi
-    run sudo systemctl enable postgresql.service
+    run sudo systemctl disable postgresql.service
     if [[ ! -d /var/lib/mysql/mysql ]]; then
       run sudo mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
     fi
-    run sudo systemctl enable mariadb.service
+    run sudo systemctl disable mariadb.service
     for service in mongodb.service mongod.service; do
       if systemctl list-unit-files "$service" >/dev/null 2>&1; then
-        run sudo systemctl enable "$service"
+        run sudo systemctl disable "$service"
       fi
     done
   fi
 
   if [[ "$WITH_AI" == 1 ]] && systemctl list-unit-files ollama.service >/dev/null 2>&1; then
-    run sudo systemctl enable ollama.service
+    run sudo systemctl disable ollama.service
   fi
 }
 
@@ -276,12 +277,13 @@ Development environment script finished.
 
 Recommended manual checks:
 - Open a new terminal and run: nvm --version, pyenv --version, mise --version
+- Use Dev Services in system-control-center to start/stop PostgreSQL, MariaDB, MongoDB and Ollama.
 - For PostgreSQL first use: sudo systemctl start postgresql.service
 - For MariaDB first use: sudo mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
 - For Ollama first use: sudo systemctl start ollama.service
 - Open Android Studio once to let it install SDK components and emulators.
 
-This script intentionally does not install Docker, Kubernetes or cloud CLIs.
+This script installs Docker/Podman basics, but does not configure Kubernetes or cloud CLIs.
 EOF
 }
 

@@ -10,7 +10,8 @@ This setup is based on the current workstation goal:
 - PostgreSQL, MongoDB and MySQL/MariaDB.
 - DBeaver, Postman, Insomnia, GIMP, Figma.
 - Ollama and LM Studio.
-- No Docker, Kubernetes, cloud CLI or VPN for now.
+- Docker/Podman basics for local database containers.
+- No Kubernetes, cloud CLI or VPN for now.
 
 ## Install
 
@@ -49,6 +50,7 @@ Base dev:
 - `jdk21-openjdk`, `maven`, `gradle`
 - `dotnet-sdk`, `aspnet-runtime`, `mono`
 - `lazygit`, `yazi`, `zoxide`, `atuin`, `direnv`
+- `podman`, `docker`, `docker-compose`
 - language servers and formatters for VS Code
 
 Databases:
@@ -83,6 +85,8 @@ Local AI:
 
 ## Notes
 
-- Docker, Kubernetes and cloud tools are intentionally excluded.
+- Kubernetes and cloud tools are intentionally excluded.
+- Database/Ollama system services are kept on demand instead of enabled at boot.
+- Use `dev-services-manager` for system services and `dev-db` for container databases.
 - LazyVim is left for manual configuration inside Neovim.
 - VS Code extensions are installed by the script when `--vscode-extensions` is used.

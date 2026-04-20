@@ -82,7 +82,7 @@ printf "DOTFILES DOCTOR\n"
 printf "Repo: %s\n\n" "$dotfiles"
 
 printf "== Commands ==\n"
-for cmd in i3 polybar rofi picom dunst alacritty tmux nvim yazi feh flameshot autorandr xrandr xinput pactl sensors; do
+for cmd in i3 polybar rofi picom dunst alacritty tmux nvim yazi feh flameshot autorandr xrandr xinput pactl sensors dock-health security-check system-mode dev-stack-manager dev-db backup-real snapshot-manager; do
   check_command "$cmd"
 done
 
@@ -95,13 +95,26 @@ for path in \
   "$HOME/.config/tmux" \
   "$HOME/.config/yazi" \
   "$HOME/.local/bin/system-control-center" \
-  "$HOME/.local/bin/tui-file-manager"; do
+  "$HOME/.local/bin/tui-file-manager" \
+  "$HOME/.local/bin/dock-health" \
+  "$HOME/.local/bin/system-mode"; do
   check_symlink "$path"
 done
 
 printf "\n== Services ==\n"
 for unit in NetworkManager.service bluetooth.service tlp.service lm_sensors.service thinkfan.service displaylink.service; do
   check_service "$unit"
+done
+
+printf "\n== Dev Services ==\n"
+for unit in postgresql.service mariadb.service mongodb.service ollama.service; do
+  active="$(systemctl is-active "$unit" 2>/dev/null || true)"
+  enabled="$(systemctl is-enabled "$unit" 2>/dev/null || true)"
+  if [[ "$enabled" == "disabled" || "$enabled" == "static" ]]; then
+    print_status ok "$unit" "${active:-unknown} / on-demand"
+  else
+    print_status warn "$unit" "${active:-unknown} / $enabled"
+  fi
 done
 
 fstrim_enabled="$(systemctl is-enabled fstrim.timer 2>/dev/null || true)"
@@ -141,6 +154,17 @@ else
   print_status warn "DISPLAY" "not available"
 fi
 
+if lsmod 2>/dev/null | awk '{print $1}' | grep -qx evdi; then
+  print_status ok "evdi module" "loaded"
+else
+  print_status warn "evdi module" "not loaded"
+fi
+
+if command -v autorandr >/dev/null 2>&1; then
+  current_profile="$(autorandr --current 2>/dev/null | paste -sd ' ' -)"
+  [[ -n "$current_profile" ]] && print_status ok "autorandr" "$current_profile" || print_status warn "autorandr" "no current profile"
+fi
+
 printf "\n== Power And Sensors ==\n"
 if [[ -d /sys/class/power_supply/BAT0 ]]; then
   cap="$(cat /sys/class/power_supply/BAT0/capacity 2>/dev/null || printf '?')"
@@ -155,6 +179,35 @@ if command -v sensors >/dev/null 2>&1; then
   print_status ok "sensors" "${cpu_temp:-available}"
 else
   print_status warn "sensors" "command missing"
+fi
+
+printf "\n== Maintenance ==\n"
+cache_size="$(du -sh "$HOME/.cache" 2>/dev/null | awk '{print $1}')"
+print_status ok "user cache" "${cache_size:-unknown}"
+
+orphan_count="$(pacman -Qtdq 2>/dev/null | wc -l | tr -d ' ')"
+if [[ "${orphan_count:-0}" -gt 0 ]]; then
+  print_status warn "orphan packages" "$orphan_count"
+else
+  print_status ok "orphan packages" "0"
+fi
+
+if command -v yay >/dev/null 2>&1; then
+  aur_updates="$(yay -Qua 2>/dev/null | wc -l | tr -d ' ')"
+  if [[ "${aur_updates:-0}" -gt 0 ]]; then
+    print_status warn "AUR updates" "$aur_updates"
+  else
+    print_status ok "AUR updates" "0"
+  fi
+else
+  print_status warn "yay" "not installed"
+fi
+
+if [[ -f "$dotfiles/backup/last-backup.txt" ]]; then
+  backup_line="$(sed -n '1p' "$dotfiles/backup/last-backup.txt" 2>/dev/null)"
+  print_status ok "last backup" "${backup_line:-available}"
+else
+  print_status warn "last backup" "missing"
 fi
 
 printf "\n== GRUB ==\n"
@@ -173,6 +226,13 @@ if [[ -d "$dotfiles/.git" ]]; then
   fi
   remote="$(git -C "$dotfiles" remote get-url origin 2>/dev/null || true)"
   [[ -n "$remote" ]] && print_status ok "origin" "$remote" || print_status warn "origin" "not configured"
+  upstream="$(git -C "$dotfiles" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)"
+  if [[ -n "$upstream" ]]; then
+    ahead="$(git -C "$dotfiles" rev-list --count "$upstream"..HEAD 2>/dev/null || printf 0)"
+    [[ "$ahead" == "0" ]] && print_status ok "unpushed commits" "0" || print_status warn "unpushed commits" "$ahead"
+  else
+    print_status warn "upstream" "not configured"
+  fi
 else
   print_status fail "dotfiles git" "not a repo"
 fi

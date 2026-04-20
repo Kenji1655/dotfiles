@@ -52,14 +52,22 @@ cd ~/.dotfiles
 
 | Command | Purpose |
 | --- | --- |
-| `system-control-center` | Main Rofi control panel |
+| `system-control-center` | Categorized Rofi control panel |
 | `system-health` | Health check alias for `dotfiles-doctor` |
 | `boot-analysis` | Show boot time, slow units and critical chain |
+| `dock-health` | Diagnose DisplayLink, EVDI, monitors, autorandr and Polybar |
+| `security-check` | Check firewall, SSH, listening ports and optional audit tools |
 | `dotfiles-doctor` | Check commands, symlinks, services, display, power, GRUB and git state |
 | `backup-dotfiles` | Update package lists and create a git snapshot |
+| `backup-real` | Run Restic/Borg backup after configuring a repository |
+| `snapshot-manager` | Create Timeshift/Snapper checkpoints before risky changes |
+| `github-remote-setup` | Configure the dotfiles GitHub remote once the repo exists |
 | `dotfiles-secret-scan` | Scan the repo for obvious secrets before pushing |
 | `security-baseline` | Enable a conservative UFW firewall baseline |
 | `dev-services-manager` | Rofi menu to start/stop PostgreSQL, MariaDB, MongoDB and Ollama on demand |
+| `dev-stack-manager` | Rofi menu with stack checks and setup notes |
+| `dev-db` | Start PostgreSQL, MongoDB or MySQL containers with Podman/Docker |
+| `system-mode` | Toggle Work, Battery, Dock, Focus, Dev and Normal modes |
 | `system-maintenance` | Clean build caches, prune pacman cache and remove debug orphan packages |
 | `restore.sh` | Re-stow user dotfiles and reapply theme |
 | `apply-theme gruvbox` | Reapply GTK/Xresources/i3 Gruvbox dark settings |
@@ -132,6 +140,20 @@ dev-services-manager
 
 The same menu is available through `system-control-center` as `Dev Services`.
 
+Container databases are available through:
+
+```bash
+dev-db postgres start
+dev-db mongo start
+dev-db mysql start
+```
+
+Stack checks and setup notes are available through:
+
+```bash
+dev-stack-manager
+```
+
 ## Maintenance
 
 The Arch installer enables:
@@ -147,6 +169,34 @@ system-maintenance all
 ```
 
 The control center also exposes this as `System Maintenance`.
+
+Before risky changes:
+
+```bash
+snapshot-manager "before kernel/displaylink update"
+```
+
+For personal-data backup, configure Restic or Borg first, then run:
+
+```bash
+backup-real
+```
+
+Recovery steps are documented in `RECOVERY.md`.
+
+## Control Center
+
+`system-control-center` is organized into categories:
+
+- System
+- Development
+- Display
+- Audio
+- Power
+- Appearance
+- Maintenance
+- Security
+- Dotfiles
 
 ## Theme
 
@@ -199,7 +249,7 @@ Then add a remote and push:
 
 ```bash
 cd ~/.dotfiles
-git remote add origin git@github.com:YOUR_USER/YOUR_REPO.git
+github-remote-setup git@github.com:YOUR_USER/YOUR_REPO.git
 git push -u origin main
 ```
 
