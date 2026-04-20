@@ -128,6 +128,30 @@ install_system_configs() {
   done
 }
 
+install_grub_theme() {
+  local theme_name="lenovo-thinkpad-efi"
+  local theme_src="$DOTFILES_DIR/grub/usr/share/grub/themes/$theme_name"
+  local theme_dst="/usr/share/grub/themes/$theme_name"
+  local theme_line="GRUB_THEME=\"$theme_dst/theme.txt\""
+
+  [[ -d "$theme_src" ]] || return 0
+
+  run sudo mkdir -p /usr/share/grub/themes
+  run sudo cp -a "$theme_src" /usr/share/grub/themes/
+
+  if [[ -f /etc/default/grub ]]; then
+    if grep -q '^GRUB_THEME=' /etc/default/grub; then
+      run sudo sed -i "s|^GRUB_THEME=.*|$theme_line|" /etc/default/grub
+    else
+      run sudo sh -c "printf '\\n%s\\n' '$theme_line' >> /etc/default/grub"
+    fi
+  fi
+
+  if command -v grub-mkconfig >/dev/null 2>&1 && [[ -d /boot/grub ]]; then
+    run sudo grub-mkconfig -o /boot/grub/grub.cfg
+  fi
+}
+
 enable_services() {
   run sudo systemctl enable NetworkManager.service
   run sudo systemctl enable bluetooth.service
@@ -195,6 +219,7 @@ main() {
   setup_shell_tools
   stow_home
   install_system_configs
+  install_grub_theme
   enable_services
   enable_user_services
   apply_browser_preferences
