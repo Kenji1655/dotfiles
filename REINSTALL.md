@@ -10,7 +10,7 @@ Install base Arch first, boot into the new user, then run:
 sudo pacman -Syu --needed git
 git clone https://github.com/YOUR_USER/YOUR_REPO.git ~/.dotfiles
 cd ~/.dotfiles
-./install.sh
+./bootstrap.sh
 ```
 
 Reboot after the installer finishes:
@@ -36,6 +36,8 @@ sudo reboot
 - Firefox and Zen need to be opened once before browser profiles exist. Run `./install.sh` again after first opening them if the `user.js` preferences were not applied.
 - Wallpapers live in `~/.config/wallpaper` and are managed by `Super + Shift + W`.
 - Run `backup-dotfiles` before big changes to create a local git snapshot and update package lists.
+- Run `dotfiles-secret-scan` before pushing to GitHub.
+- Run `system-health` after restoring to verify services, symlinks, displays, sensors and GRUB theme.
 
 ## Ubuntu 24.04.x
 
@@ -46,7 +48,7 @@ sudo apt update
 sudo apt install -y git
 git clone https://github.com/YOUR_USER/YOUR_REPO.git ~/.dotfiles
 cd ~/.dotfiles
-./install-ubuntu-24.04.sh
+./bootstrap.sh
 ```
 
 Optional laptop packages such as TLP and thinkfan can be installed with:
@@ -75,7 +77,25 @@ Reapply all dotfiles:
 
 ```bash
 cd ~/.dotfiles
-./install.sh
+./restore.sh
+```
+
+Run the system doctor:
+
+```bash
+system-health
+```
+
+Open the control center:
+
+```bash
+system-control-center
+```
+
+Check for secrets before pushing:
+
+```bash
+dotfiles-secret-scan
 ```
 
 Check changed files:

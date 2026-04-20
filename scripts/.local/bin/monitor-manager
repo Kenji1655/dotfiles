@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+profile="${1:-menu}"
+
+reload_polybar() {
+  "$HOME/.config/polybar/launch.sh" >/dev/null 2>&1 || true
+}
+
+load_profile() {
+  local name="$1"
+  autorandr --load "$name"
+  reload_polybar
+  notify-send "Monitors" "Loaded profile: $name" 2>/dev/null || true
+}
+
+case "$profile" in
+  menu)
+    mapfile -t profiles < <(autorandr --list 2>/dev/null | sed 's/ .*//g' | sort -u)
+    choices=$'Detect\nSave current\nReload Polybar'
+    if ((${#profiles[@]})); then
+      choices+=$'\n'
+      choices+="$(printf '%s\n' "${profiles[@]}")"
+    fi
+    choice="$(printf '%s\n' "$choices" | rofi -dmenu -p "Monitors")"
+    case "$choice" in
+      Detect)
+        autorandr --change
+        reload_polybar
+        ;;
+      "Save current")
+        name="$(printf 'notebook\ndock-dual\ndock-single\npresentation\n' | rofi -dmenu -p "Profile name")"
+        [[ -n "$name" ]] && autorandr --save "$name" --force
+        ;;
+      "Reload Polybar")
+        reload_polybar
+        ;;
+      "")
+        exit 0
+        ;;
+      *)
+        load_profile "$choice"
+        ;;
+    esac
+    ;;
+  detect)
+    autorandr --change
+    reload_polybar
+    ;;
+  reload-polybar)
+    reload_polybar
+    ;;
+  save)
+    name="${2:-}"
+    [[ -n "$name" ]] || { printf 'Usage: monitor-manager save <name>\n' >&2; exit 2; }
+    autorandr --save "$name" --force
+    ;;
+  *)
+    load_profile "$profile"
+    ;;
+esac

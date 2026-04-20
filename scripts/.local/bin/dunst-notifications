@@ -92,6 +92,18 @@ clear_history() {
     dunstctl history-clear >/dev/null 2>&1 || true
 }
 
+menu() {
+    local choice
+    choice="$(printf 'Show unseen\nToggle pause\nClear history\nClose visible\n' | rofi -dmenu -p 'Notifications')"
+
+    case "$choice" in
+        "Show unseen") show_history ;;
+        "Toggle pause") dunstctl set-paused toggle >/dev/null 2>&1 || true ;;
+        "Clear history") clear_history ;;
+        "Close visible") dunstctl close-all >/dev/null 2>&1 || true ;;
+    esac
+}
+
 case "${1:-status}" in
     status)
         status
@@ -105,8 +117,11 @@ case "${1:-status}" in
     toggle)
         dunstctl set-paused toggle >/dev/null 2>&1 || true
         ;;
+    menu)
+        menu
+        ;;
     *)
-        printf 'usage: %s [status|show|clear|toggle]\n' "$0" >&2
+        printf 'usage: %s [status|show|clear|toggle|menu]\n' "$0" >&2
         exit 2
         ;;
 esac

@@ -36,7 +36,7 @@ install_pacman_packages() {
     gvfs gvfs-mtp gvfs-gphoto2 polkit-gnome trash-cli file-roller zip unzip
     7zip unrar ffmpegthumbnailer poppler-glib xdg-user-dirs noto-fonts-emoji
     ttf-liberation man-db man-pages reflector pacman-contrib qt5ct qt6ct kvantum
-    xsettingsd dkms linux-zen-headers
+    xsettingsd dkms linux-zen-headers ufw
   )
   run sudo pacman -Syu --needed --noconfirm "${packages[@]}"
 }

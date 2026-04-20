@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+printf '== systemd-analyze ==\n'
+systemd-analyze || true
+
+printf '\n== blame ==\n'
+systemd-analyze blame | sed -n '1,40p' || true
+
+printf '\n== critical-chain ==\n'
+systemd-analyze critical-chain || true

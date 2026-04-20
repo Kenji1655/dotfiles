@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+mapfile -t sinks < <(pactl list short sinks | awk '{print $1 "\t" $2}')
+
+if ((${#sinks[@]} == 0)); then
+  notify-send "Audio" "No sinks found" 2>/dev/null || true
+  exit 1
+fi
+
+choice="$(printf '%s\n' "${sinks[@]}" | rofi -dmenu -p "Audio output")"
+[[ -n "$choice" ]] || exit 0
+
+sink_id="${choice%%$'\t'*}"
+pactl set-default-sink "$sink_id"
+
+while read -r input; do
+  [[ -n "$input" ]] && pactl move-sink-input "$input" "$sink_id" || true
+done < <(pactl list short sink-inputs | awk '{print $1}')
+
+notify-send "Audio" "Output: ${choice#*$'\t'}" 2>/dev/null || true

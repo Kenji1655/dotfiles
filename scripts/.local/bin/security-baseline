@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v ufw >/dev/null 2>&1; then
+  printf 'ufw is not installed. Install it with the system package manager first.\n' >&2
+  exit 1
+fi
+
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw --force enable
+
+if systemctl list-unit-files ufw.service >/dev/null 2>&1; then
+  sudo systemctl enable --now ufw.service
+fi
+
+printf 'Security baseline applied: deny incoming, allow outgoing, ufw enabled.\n'

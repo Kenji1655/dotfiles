@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+style='window {width: 420px; border: 2px; border-color: #fbf1c7; border-radius: 8px; background-color: #1d2021f2;} listview {lines: 14;} element {padding: 9px 12px;} element selected {background-color: #3c3836; text-color: #fbf1c7;} entry {placeholder: "System";}'
+
+run_terminal() {
+  local title="$1"
+  shift
+  alacritty --title "$title" -e "$@"
+}
+
+choices=$(
+  cat <<'EOF'
+Wallpaper
+Power Menu
+Energy Profile
+Monitor Profiles
+Audio Output
+Bluetooth
+Wi-Fi
+Notifications
+Screenshot Area
+Screen Recording
+File Manager
+Presentation Mode
+System Health
+Boot Analysis
+Apply Gruvbox Theme
+Backup Dotfiles
+Secret Scan
+Security Baseline
+Edit Dotfiles
+Reload i3
+Restart Polybar
+EOF
+)
+
+choice="$(printf '%s\n' "$choices" | rofi -dmenu -p "Control Center" -theme-str "$style")"
+
+case "$choice" in
+  Wallpaper) wallpaper-picker ;;
+  "Power Menu") "$HOME/.config/rofi/power-menu.sh" ;;
+  "Energy Profile") power-profile-indicator menu ;;
+  "Monitor Profiles") monitor-manager menu ;;
+  "Audio Output") audio-switcher ;;
+  Bluetooth) blueman-manager ;;
+  Wi-Fi) nm-connection-editor ;;
+  Notifications) dunst-notifications menu ;;
+  "Screenshot Area") flameshot gui ;;
+  "Screen Recording") screen-recorder menu ;;
+  "File Manager") tui-file-manager ;;
+  "Presentation Mode") presentation-mode toggle ;;
+  "System Health") run_terminal "SYSTEM HEALTH" zsh -lc 'system-health; printf "\nPress enter to close..."; read -r' ;;
+  "Boot Analysis") run_terminal "BOOT ANALYSIS" zsh -lc 'boot-analysis; printf "\nPress enter to close..."; read -r' ;;
+  "Apply Gruvbox Theme") apply-theme gruvbox ;;
+  "Backup Dotfiles") run_terminal "BACKUP DOTFILES" zsh -lc 'backup-dotfiles; printf "\nPress enter to close..."; read -r' ;;
+  "Secret Scan") run_terminal "SECRET SCAN" zsh -lc 'dotfiles-secret-scan; printf "\nPress enter to close..."; read -r' ;;
+  "Security Baseline") run_terminal "SECURITY BASELINE" zsh -lc 'security-baseline; printf "\nPress enter to close..."; read -r' ;;
+  "Edit Dotfiles") alacritty --title "DOTFILES" -e nvim "$HOME/.dotfiles" ;;
+  "Reload i3") i3-msg reload ;;
+  "Restart Polybar") "$HOME/.config/polybar/launch.sh" ;;
+  ""|*) exit 0 ;;
+esac

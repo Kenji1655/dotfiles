@@ -1,31 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "== Failed units =="
-systemctl --failed --no-pager
-echo
-
-echo "== User failed units =="
-systemctl --user --failed --no-pager || true
-echo
-
-echo "== Core services =="
-for unit in NetworkManager.service bluetooth.service tlp.service rtkit-daemon.service accounts-daemon.service udisks2.service; do
-  printf "%-34s %s / %s\n" "$unit" "$(systemctl is-active "$unit" 2>/dev/null)" "$(systemctl is-enabled "$unit" 2>/dev/null)"
-done
-echo
-
-echo "== User audio/session services =="
-for unit in pipewire.service pipewire-pulse.service wireplumber.service xdg-desktop-portal.service xdg-desktop-portal-gtk.service; do
-  printf "%-34s %s\n" "$unit" "$(systemctl --user is-active "$unit" 2>/dev/null || true)"
-done
-echo
-
-echo "== Battery thresholds =="
-if command -v tlp-stat >/dev/null; then
-  sudo tlp-stat -b | sed -n '/Battery Care/,/Capacity/p'
-fi
-echo
-
-echo "== Recent warnings =="
-journalctl -p warning..alert -b --no-pager | tail -n 40
+exec dotfiles-doctor "$@"

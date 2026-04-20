@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+state_file="${XDG_CACHE_HOME:-$HOME/.cache}/presentation-mode.state"
+action="${1:-toggle}"
+
+enable_mode() {
+  mkdir -p "$(dirname "$state_file")"
+  {
+    xset q 2>/dev/null | awk '/DPMS is/ {print $3}' | tail -n 1
+    dunstctl is-paused 2>/dev/null || printf 'false'
+  } >"$state_file"
+
+  xset s off -dpms 2>/dev/null || true
+  dunstctl set-paused true 2>/dev/null || true
+  command -v powerprofilesctl >/dev/null 2>&1 && powerprofilesctl set performance 2>/dev/null || true
+  notify-send "Presentation mode" "ON: lock, DPMS and notifications paused" 2>/dev/null || true
+}
+
+disable_mode() {
+  xset s on +dpms 2>/dev/null || true
+  dunstctl set-paused false 2>/dev/null || true
+  command -v powerprofilesctl >/dev/null 2>&1 && powerprofilesctl set balanced 2>/dev/null || true
+  rm -f "$state_file"
+  notify-send "Presentation mode" "OFF: normal desktop restored" 2>/dev/null || true
+}
+
+case "$action" in
+  on) enable_mode ;;
+  off) disable_mode ;;
+  status)
+    [[ -f "$state_file" ]] && printf 'on\n' || printf 'off\n'
+    ;;
+  toggle)
+    if [[ -f "$state_file" ]]; then
+      disable_mode
+    else
+      enable_mode
+    fi
+    ;;
+  *)
+    printf 'Usage: presentation-mode [on|off|toggle|status]\n' >&2
+    exit 2
+    ;;
+esac

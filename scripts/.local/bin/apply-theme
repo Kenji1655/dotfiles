@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+theme="${1:-gruvbox}"
+
+case "$theme" in
+  gruvbox|dark)
+    gtk_theme="gruvbox-dark-gtk"
+    icon_theme="Papirus-Dark"
+    cursor_theme="Bibata-Modern-Classic"
+    ;;
+  *)
+    printf 'Unsupported theme: %s\n' "$theme" >&2
+    exit 2
+    ;;
+esac
+
+gsettings set org.gnome.desktop.interface gtk-theme "$gtk_theme" 2>/dev/null || true
+gsettings set org.gnome.desktop.interface icon-theme "$icon_theme" 2>/dev/null || true
+gsettings set org.gnome.desktop.interface cursor-theme "$cursor_theme" 2>/dev/null || true
+gsettings set org.gnome.desktop.interface color-scheme prefer-dark 2>/dev/null || true
+
+if [[ -f "$HOME/.Xresources" ]]; then
+  xrdb -merge "$HOME/.Xresources" 2>/dev/null || true
+fi
+
+if command -v systemctl >/dev/null 2>&1; then
+  systemctl --user restart xsettingsd.service 2>/dev/null || true
+fi
+
+if pgrep -x i3 >/dev/null 2>&1; then
+  i3-msg reload >/dev/null 2>&1 || true
+fi
+
+notify-send "Theme" "Gruvbox dark applied" 2>/dev/null || true
+printf 'Applied %s theme\n' "$theme"
