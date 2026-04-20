@@ -9,7 +9,7 @@ Arch Linux + i3/Xorg workstation tuned for a ThinkPad, DisplayLink dock, Gruvbox
 - Rofi menus for apps, power, wallpapers, recording and the central control center.
 - Picom, Dunst, Alacritty, tmux, Yazi, btop, fastfetch and LazyVim using a consistent Gruvbox/dark palette.
 - GRUB ThinkPad EFI 2x dark theme.
-- TLP, thinkfan, DisplayLink, sensors and power profile helpers.
+- TLP, thinkfan, DisplayLink, sensors, TRIM, maintenance timers and power profile helpers.
 
 ## Quick Install
 
@@ -59,6 +59,8 @@ cd ~/.dotfiles
 | `backup-dotfiles` | Update package lists and create a git snapshot |
 | `dotfiles-secret-scan` | Scan the repo for obvious secrets before pushing |
 | `security-baseline` | Enable a conservative UFW firewall baseline |
+| `dev-services-manager` | Rofi menu to start/stop PostgreSQL, MariaDB, MongoDB and Ollama on demand |
+| `system-maintenance` | Clean build caches, prune pacman cache and remove debug orphan packages |
 | `restore.sh` | Re-stow user dotfiles and reapply theme |
 | `apply-theme gruvbox` | Reapply GTK/Xresources/i3 Gruvbox dark settings |
 | `monitor-manager` | Load/save autorandr profiles and restart Polybar |
@@ -121,6 +123,30 @@ Main stack:
 - Ollama and LM Studio
 
 LazyVim details are in `nvim/README.md`.
+
+Heavy development services are intentionally kept on demand instead of starting at boot:
+
+```bash
+dev-services-manager
+```
+
+The same menu is available through `system-control-center` as `Dev Services`.
+
+## Maintenance
+
+The Arch installer enables:
+
+- `fstrim.timer` for weekly SSD/NVMe TRIM.
+- `dotfiles-maintenance.timer` for weekly user build-cache cleanup.
+- `NetworkManager-wait-online.service` disabled to avoid delaying desktop boot.
+
+Manual maintenance:
+
+```bash
+system-maintenance all
+```
+
+The control center also exposes this as `System Maintenance`.
 
 ## Theme
 

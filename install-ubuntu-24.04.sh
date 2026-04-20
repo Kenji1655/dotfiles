@@ -279,6 +279,10 @@ enable_user_services() {
     run systemctl --user daemon-reload
     run systemctl --user enable --now xsettingsd.service || true
   fi
+  if [[ -f "$HOME/.config/systemd/user/dotfiles-maintenance.timer" ]]; then
+    run systemctl --user daemon-reload
+    run systemctl --user enable --now dotfiles-maintenance.timer || true
+  fi
 }
 
 apply_browser_preferences() {
@@ -320,7 +324,9 @@ apply_user_settings() {
 
 enable_desktop_services() {
   run sudo systemctl enable NetworkManager.service || true
+  run sudo systemctl disable NetworkManager-wait-online.service || true
   run sudo systemctl enable bluetooth.service || true
+  run sudo systemctl enable fstrim.timer || true
 }
 
 print_notes() {
@@ -331,6 +337,8 @@ Ubuntu install finished.
 Notes:
 - Reboot, then choose the i3 session on the login screen.
 - This Ubuntu installer does not install Ly, TLP, thinkfan or DisplayLink by default.
+- The dotfiles maintenance timer is enabled when user systemd is available.
+- PostgreSQL, MariaDB, MongoDB and Ollama are managed on demand by dev-services-manager if installed.
 - If Polybar backlight does not appear, adjust the backlight card in ~/.config/polybar/config.ini.
 - Zen Browser is only configured if it is installed at /opt/zen-browser-bin/zen-bin.
 - Firefox/Zen user.js is applied only after browser profiles exist; run this installer again after opening the browsers once.
