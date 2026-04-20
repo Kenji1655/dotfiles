@@ -2,20 +2,71 @@
 # Toggle the Synaptics touchpad on/off (X11 + libinput).
 set -euo pipefail
 
+export DISPLAY="${DISPLAY:-:0}"
+export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+
 device="SYNA8020:00 06CB:CE5C Touchpad"
+action="${1:-toggle}"
 
-state=$(xinput list-props "$device" | awk -F: '/Device Enabled/ {gsub(/[ \t]/, "", $2); print $2; exit}')
+notify() {
+  local msg="$1"
+  if command -v dunstify >/dev/null; then
+    dunstify -r 9911 -t 1500 -a touchpad "$msg" 2>/dev/null || true
+  elif command -v notify-send >/dev/null; then
+    notify-send -r 9911 -t 1500 -a touchpad "$msg" 2>/dev/null || true
+  fi
+}
 
-if [[ "$state" == "1" ]]; then
-  xinput disable "$device"
-  msg="Touchpad OFF"
-else
-  xinput enable "$device"
-  msg="Touchpad ON"
+usage() {
+  printf 'Usage: %s [toggle|status|on|off]\n' "$(basename "$0")"
+}
+
+get_state() {
+  xinput list-props "$device" 2>/dev/null | awk -F: '/Device Enabled/ {gsub(/[ \t]/, "", $2); print $2; exit}'
+}
+
+if [[ "$action" == "-h" || "$action" == "--help" ]]; then
+  usage
+  exit 0
 fi
 
-if command -v dunstify >/dev/null; then
-  dunstify -r 9911 -t 1500 -a touchpad "$msg"
-elif command -v notify-send >/dev/null; then
-  notify-send -r 9911 -t 1500 -a touchpad "$msg"
+if ! command -v xinput >/dev/null 2>&1; then
+  printf 'xinput is not installed.\n' >&2
+  notify "Touchpad: xinput not installed"
+  exit 1
 fi
+
+state="$(get_state)"
+if [[ -z "$state" ]]; then
+  printf 'Could not read touchpad state for device: %s\n' "$device" >&2
+  printf 'Check DISPLAY/XAUTHORITY or run: xinput list\n' >&2
+  notify "Touchpad device not found"
+  exit 1
+fi
+
+case "$action" in
+  status)
+    [[ "$state" == "1" ]] && printf 'on\n' || printf 'off\n'
+    ;;
+  on)
+    xinput enable "$device"
+    notify "Touchpad ON"
+    ;;
+  off)
+    xinput disable "$device"
+    notify "Touchpad OFF"
+    ;;
+  toggle)
+    if [[ "$state" == "1" ]]; then
+      xinput disable "$device"
+      notify "Touchpad OFF"
+    else
+      xinput enable "$device"
+      notify "Touchpad ON"
+    fi
+    ;;
+  *)
+    usage >&2
+    exit 2
+    ;;
+esac

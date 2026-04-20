@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if ! systemd-analyze >/tmp/boot-analysis.summary 2>/tmp/boot-analysis.error; then
+  printf 'systemd-analyze is not available in this session.\n'
+  sed -n '1,8p' /tmp/boot-analysis.error
+  exit 0
+fi
+
 printf '== systemd-analyze ==\n'
-systemd-analyze || true
+cat /tmp/boot-analysis.summary
 
 printf '\n== blame ==\n'
 systemd-analyze blame | sed -n '1,40p' || true
