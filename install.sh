@@ -31,12 +31,12 @@ install_pacman_packages() {
     bat eza fd ripgrep fzf git-delta noto-fonts inter-font
     ttf-jetbrains-mono-nerd papirus-icon-theme lxappearance flameshot autorandr
     xorg-xrdb xorg-xrandr xclip stow ly tlp tlp-rdw bluez bluez-utils vulkan-radeon
-    libva-utils sof-firmware alsa-utils zsh-autosuggestions zsh-syntax-highlighting
+    libva-utils sof-firmware alsa-utils upower zsh-autosuggestions zsh-syntax-highlighting
     rtkit wireless-regdb accountsservice xdg-desktop-portal xdg-desktop-portal-gtk
     gvfs gvfs-mtp gvfs-gphoto2 polkit-gnome trash-cli file-roller zip unzip
     7zip unrar ffmpegthumbnailer poppler-glib xdg-user-dirs noto-fonts-emoji
     ttf-liberation man-db man-pages reflector pacman-contrib qt5ct qt6ct kvantum
-    xsettingsd dkms linux-zen-headers ufw arch-audit lynis restic borg podman docker
+    xsettingsd dkms linux-headers linux-lts-headers ufw arch-audit lynis restic borg podman docker
   )
   run sudo pacman -Syu --needed --noconfirm "${packages[@]}"
 }
@@ -60,6 +60,21 @@ clone_if_missing() {
   run git clone --depth=1 "$url" "$dest"
 }
 
+resolve_login_shell() {
+  local candidate
+  while IFS= read -r candidate; do
+    [[ -n "$candidate" ]] || continue
+    [[ "$candidate" =~ ^# ]] && continue
+    [[ -x "$candidate" ]] || continue
+    if [[ "$(basename "$candidate")" == "zsh" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done < /etc/shells
+
+  return 1
+}
+
 setup_shell_tools() {
   clone_if_missing https://github.com/ohmyzsh/ohmyzsh.git "$HOME/.oh-my-zsh"
   clone_if_missing https://github.com/zsh-users/zsh-autosuggestions "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
@@ -67,9 +82,9 @@ setup_shell_tools() {
   clone_if_missing https://github.com/romkatv/powerlevel10k.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
   clone_if_missing https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
   local zsh_path
-  zsh_path="$(command -v zsh || true)"
+  zsh_path="$(resolve_login_shell || true)"
   if [[ -n "$zsh_path" && "$(getent passwd "$USER" | cut -d: -f7)" != "$zsh_path" ]]; then
-    run chsh -s "$zsh_path"
+    run sudo chsh -s "$zsh_path" "$USER"
   fi
 }
 
@@ -98,8 +113,22 @@ backup_package_targets() {
   done < <(find "$package_dir" -type f -print0)
 }
 
+ensure_materialized_dir() {
+  local dir="$1"
+  if [[ -L "$dir" ]]; then
+    run rm "$dir"
+  fi
+  run mkdir -p "$dir"
+}
+
 stow_home() {
   local backup_root="$DOTFILES_DIR/backup/$(date +%Y%m%d-%H%M%S)"
+  # These targets receive generated state at runtime and must remain real directories.
+  ensure_materialized_dir "$HOME/.config/systemd"
+  ensure_materialized_dir "$HOME/.config/systemd/user"
+  ensure_materialized_dir "$HOME/.config/systemd/user/default.target.wants"
+  ensure_materialized_dir "$HOME/.config/systemd/user/timers.target.wants"
+  ensure_materialized_dir "$HOME/.local/share/applications"
   local packages=(i3 polybar rofi picom dunst alacritty tmux zsh git nvim btop fastfetch ranger yazi gtk qt profile xresources xsettingsd scripts browser systemd autorandr wallpaper wireplumber portal)
   for pkg in "${packages[@]}"; do
     backup_package_targets "$pkg" "$HOME" "$backup_root"
@@ -113,9 +142,12 @@ install_system_configs() {
     "$DOTFILES_DIR/ly/etc/ly/config.ini:/etc/ly/config.ini"
     "$DOTFILES_DIR/tlp/etc/tlp.d/01-thinkpad-e14-amd.conf:/etc/tlp.d/01-thinkpad-e14-amd.conf"
     "$DOTFILES_DIR/thinkfan/etc/thinkfan.yaml:/etc/thinkfan.yaml"
+    "$DOTFILES_DIR/thinkfan/etc/modprobe.d/99-thinkfan.conf:/etc/modprobe.d/99-thinkfan.conf"
+    "$DOTFILES_DIR/lm_sensors/etc/conf.d/lm_sensors:/etc/conf.d/lm_sensors"
     "$DOTFILES_DIR/lm_sensors/etc/sensors.d/thinkpad-e14-ddr5.conf:/etc/sensors.d/thinkpad-e14-ddr5.conf"
     "$DOTFILES_DIR/lm_sensors/etc/sensors.d/thinkpad-isa.conf:/etc/sensors.d/thinkpad-isa.conf"
     "$DOTFILES_DIR/bluetooth/etc/bluetooth/main.conf:/etc/bluetooth/main.conf"
+    "$DOTFILES_DIR/zram/etc/systemd/zram-generator.conf:/etc/systemd/zram-generator.conf"
   )
   for pair in "${pairs[@]}"; do
     local src="${pair%%:*}"
@@ -133,6 +165,7 @@ install_grub_theme() {
   local theme_src="$DOTFILES_DIR/grub/usr/share/grub/themes/$theme_name"
   local theme_dst="/usr/share/grub/themes/$theme_name"
   local theme_line="GRUB_THEME=\"$theme_dst/theme.txt\""
+  local fan_flag="thinkpad_acpi.fan_control=1"
 
   [[ -d "$theme_src" ]] || return 0
 
@@ -145,6 +178,14 @@ install_grub_theme() {
     else
       run sudo sh -c "printf '\\n%s\\n' '$theme_line' >> /etc/default/grub"
     fi
+
+    if grep -q '^GRUB_CMDLINE_LINUX=' /etc/default/grub; then
+      if ! grep -q "$fan_flag" /etc/default/grub; then
+        run sudo sed -i "/^GRUB_CMDLINE_LINUX=/ s|\"$| $fan_flag\"|" /etc/default/grub
+      fi
+    else
+      run sudo sh -c "printf 'GRUB_CMDLINE_LINUX=\"%s\"\\n' '$fan_flag' >> /etc/default/grub"
+    fi
   fi
 
   if command -v grub-mkconfig >/dev/null 2>&1 && [[ -d /boot/grub ]]; then
@@ -155,8 +196,15 @@ install_grub_theme() {
 enable_services() {
   run sudo systemctl enable NetworkManager.service
   run sudo systemctl disable NetworkManager-wait-online.service || true
+  run sudo systemctl disable --now power-profiles-daemon.service || true
+  run sudo systemctl mask power-profiles-daemon.service || true
   run sudo systemctl enable bluetooth.service
+  run sudo systemctl enable systemd-resolved.service
+  run sudo systemctl enable systemd-homed.service
   run sudo systemctl enable tlp.service
+  run sudo systemctl enable ufw.service
+  run sudo ufw --force enable
+  run sudo ufw logging off
   run sudo systemctl enable fstrim.timer
   run sudo systemctl enable lm_sensors.service
   run sudo systemctl enable thinkfan.service thinkfan-sleep.service thinkfan-wakeup.service

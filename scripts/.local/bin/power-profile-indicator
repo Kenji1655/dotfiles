@@ -23,33 +23,24 @@ case "${1:-status}" in
         ;;
     notify)
         if [[ "$ac_online" == "1" ]]; then
-            mode="Tomada: performance maxima"
+            mode="AC power: maximum performance"
         else
-            mode="Bateria: autonomia com desempenho balanceado"
+            mode="Battery: balanced efficiency and performance"
         fi
 
-        notify-send "Plano de energia" "$mode
+        notify-send "Power Profile" "$mode
 Platform: $platform
 EPP: $epp
 Governor: $governor"
         ;;
     menu)
-        choice="$(printf 'Notify current\nPerformance\nBalanced\nPower saver\n' | rofi -dmenu -p 'Energy')"
+        choice="$(printf 'Notify current\nHow it works\n' | rofi -dmenu -p 'Energy')"
         case "$choice" in
             "Notify current")
                 "$0" notify
                 ;;
-            Performance)
-                command -v powerprofilesctl >/dev/null 2>&1 && powerprofilesctl set performance || true
-                notify-send "Plano de energia" "Performance"
-                ;;
-            Balanced)
-                command -v powerprofilesctl >/dev/null 2>&1 && powerprofilesctl set balanced || true
-                notify-send "Plano de energia" "Balanced"
-                ;;
-            "Power saver")
-                command -v powerprofilesctl >/dev/null 2>&1 && powerprofilesctl set power-saver || true
-                notify-send "Plano de energia" "Power saver"
+            "How it works")
+                notify-send "Power Profile" "TLP manages the profile automatically.\nAC: performance\nBattery: balanced/powersave"
                 ;;
         esac
         ;;

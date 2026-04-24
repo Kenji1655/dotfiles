@@ -1,81 +1,81 @@
 # LazyVim setup
 
-Config principal em `.config/nvim`, com LazyVim, Gruvbox, LSP, formatacao, lint,
-testes, debug, Git, banco de dados e terminais de IA.
+Main config lives in `.config/nvim`, with LazyVim, Gruvbox, LSP, formatting, linting,
+testing, debugging, Git, database tooling, and AI terminals.
 
-## Atalhos principais
+## Main Keybindings
 
-### IA e terminal
+### AI And Terminal
 
-- `<leader>ac`: abrir Codex CLI no terminal flutuante
-- `<leader>aC`: abrir Claude Code CLI no terminal flutuante
-- `<leader>as`: abrir shell no terminal flutuante
-- `:Codex`: abrir Codex CLI
-- `:Claude`: abrir Claude Code CLI
+- `<leader>ac`: open Codex CLI in a floating terminal
+- `<leader>aC`: open Claude Code CLI in a floating terminal
+- `<leader>as`: open a shell in a floating terminal
+- `:Codex`: open Codex CLI
+- `:Claude`: open Claude Code CLI
 
 ### Debug
 
-- `<leader>db`: alternar breakpoint
-- `<leader>dB`: breakpoint condicional
-- `<leader>dc`: iniciar/continuar
-- `<leader>da`: iniciar com argumentos
+- `<leader>db`: toggle breakpoint
+- `<leader>dB`: conditional breakpoint
+- `<leader>dc`: start/continue
+- `<leader>da`: start with arguments
 - `<leader>dO`: step over
 - `<leader>di`: step into
 - `<leader>do`: step out
-- `<leader>du`: abrir/fechar DAP UI
-- `<leader>dt`: terminar sessao
+- `<leader>du`: open/close DAP UI
+- `<leader>dt`: terminate session
 
-Debug nativo usa `lldb-dap` para C, C++ e Rust.
+Native debugging uses `lldb-dap` for C, C++ and Rust.
 
-### Testes
+### Tests
 
-- `<leader>tr`: rodar teste mais proximo
-- `<leader>tt`: rodar testes do arquivo
-- `<leader>tT`: rodar todos os testes do projeto
-- `<leader>td`: debugar teste mais proximo
-- `<leader>to`: abrir output
-- `<leader>tO`: alternar painel de output
-- `<leader>ts`: alternar resumo
-- `<leader>tw`: watch do arquivo atual
+- `<leader>tr`: run nearest test
+- `<leader>tt`: run file tests
+- `<leader>tT`: run all project tests
+- `<leader>td`: debug nearest test
+- `<leader>to`: open output
+- `<leader>tO`: toggle output panel
+- `<leader>ts`: toggle summary
+- `<leader>tw`: watch current file
 
-Adaptadores configurados: Jest, Vitest, Python, Rust, Go e .NET/VSTest.
+Configured adapters: Jest, Vitest, Python, Rust, Go and .NET/VSTest.
 
 ### Git
 
-- `<leader>gg`: LazyGit na raiz do repo
-- `<leader>gd`: abrir Diffview
-- `<leader>gD`: fechar Diffview
-- `<leader>ghf`: historico do arquivo
-- `<leader>gH`: historico do repo
+- `<leader>gg`: open LazyGit at the repo root
+- `<leader>gd`: open Diffview
+- `<leader>gD`: close Diffview
+- `<leader>ghf`: file history
+- `<leader>gH`: repo history
 - `<leader>ghs`: stage hunk
 - `<leader>ghR`: reset hunk
 - `<leader>ghp`: preview hunk
-- `<leader>gb`: blame da linha
+- `<leader>gb`: line blame
 - `<leader>gbt`: blame inline on/off
 
-### Banco de dados
+### Databases
 
-- `<leader>Db`: abrir/fechar Dadbod UI
-- `<leader>Da`: adicionar conexao
-- `<leader>Df`: encontrar buffer de banco
-- `<leader>Dq`: info da ultima query
+- `<leader>Db`: open/close Dadbod UI
+- `<leader>Da`: add connection
+- `<leader>Df`: find database buffer
+- `<leader>Dq`: last query info
 
-Use variaveis de ambiente para conexoes sensiveis, por exemplo:
+Use environment variables for sensitive connections, for example:
 
 ```sh
 export DATABASE_URL='postgres://user:pass@localhost:5432/db'
 ```
 
-Depois use `:DB $DATABASE_URL`.
+Then use `:DB $DATABASE_URL`.
 
-### Sessoes
+### Sessions
 
-- `<leader>qs`: restaurar sessao do projeto
-- `<leader>qS`: selecionar sessao
-- `<leader>ql`: restaurar ultima sessao
-- `<leader>qd`: parar de salvar sessao atual
+- `<leader>qs`: restore project session
+- `<leader>qS`: select session
+- `<leader>ql`: restore last session
+- `<leader>qd`: stop saving the current session
 
-## Ferramentas externas esperadas
+## Expected External Tools
 
 - `codex`
 - `claude`
