@@ -3,4 +3,6 @@ __pycache__/
 .DS_Store
 install.log
 install-ubuntu.log
+backup/[0-9]*/
+backup/system-[0-9]*/
 backup/adopt-*/
