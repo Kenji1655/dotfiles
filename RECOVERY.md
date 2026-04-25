@@ -6,6 +6,7 @@ Use this when the desktop, boot theme, dock or power stack breaks.
 
 ```bash
 system-health
+performance-health
 systemctl --failed --no-pager
 systemctl --user --failed --no-pager
 journalctl -p 3 -b --no-pager
@@ -15,7 +16,7 @@ journalctl -p 3 -b --no-pager
 
 ```bash
 cd ~/.dotfiles
-./restore.sh
+./install.sh
 i3-msg reload
 ~/.config/polybar/launch.sh
 ```
@@ -46,9 +47,12 @@ pgrep -a polybar
 ```bash
 dock-health
 sudo systemctl restart displaylink.service
-autorandr --change
+monitor-manager detect
 ~/.config/polybar/launch.sh
 ```
+
+Automatic autorandr hotplug is intentionally disabled for DisplayLink docks.
+Apply monitor profiles manually after the dock has settled.
 
 If EVDI/DKMS broke after a kernel update:
 

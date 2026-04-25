@@ -25,6 +25,8 @@ status_icon() {
 terminal_run() {
   local title="$1"
   local command="$2"
+  # The script is evaluated inside the spawned terminal, so the single quotes are intentional.
+  # shellcheck disable=SC2016
   env TERMINAL_TITLE="$title" TERMINAL_COMMAND="$command" alacritty --title "$title" -e bash -lc '
     export PATH="$HOME/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
     clear

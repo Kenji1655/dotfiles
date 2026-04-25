@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+ok=$'\033[32mOK\033[0m'
+warn=$'\033[33mWARN\033[0m'
+current_user="${USER:-$(id -un)}"
+
+line() {
+  printf '%b    %-26s %s\n' "$1" "$2" "${3:-}"
+}
+
+printf 'PERFORMANCE HEALTH\n\n'
+
+printf '== CPU And Power ==\n'
+governor="$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || true)"
+if [[ -n "$governor" ]]; then
+  line "$ok" "CPU governor" "$governor"
+else
+  line "$warn" "CPU governor" "unavailable"
+fi
+
+if command -v tlp-stat >/dev/null 2>&1; then
+  tlp_state="$(systemctl is-active tlp.service 2>/dev/null || true)"
+  line "$ok" "TLP" "${tlp_state:-unknown}"
+else
+  line "$warn" "TLP" "not installed"
+fi
+
+if command -v sensors >/dev/null 2>&1; then
+  temp="$(sensors 2>/dev/null | awk '/Tctl|Package id 0|CPU/ {print $2; exit}')"
+  line "$ok" "CPU temperature" "${temp:-available}"
+else
+  line "$warn" "sensors" "not installed"
+fi
+
+printf '\n== Memory And Swap ==\n'
+free -h 2>/dev/null | sed -n '1,3p'
+if command -v zramctl >/dev/null 2>&1; then
+  zramctl 2>/dev/null | sed -n '1,6p' || true
+fi
+swapon --show 2>/dev/null || true
+
+printf '\n== Storage ==\n'
+df -h / /home 2>/dev/null | sed -n '1,5p'
+fstrim_state="$(systemctl is-active fstrim.timer 2>/dev/null || true)"
+line "$ok" "fstrim.timer" "${fstrim_state:-unknown}"
+
+printf '\n== Boot Slow Units ==\n'
+systemd-analyze blame 2>/dev/null | sed -n '1,12p' || true
+
+printf '\n== Heavy User Processes ==\n'
+ps -eo pid,comm,%cpu,%mem --sort=-%mem 2>/dev/null | sed -n '1,12p'
+
+printf '\n== Containers And VMs ==\n'
+if command -v docker >/dev/null 2>&1; then
+  docker_output="$(docker ps --format 'docker  {{.Names}}  {{.Status}}' 2>&1)"
+  docker_status=$?
+  if ((docker_status == 0)); then
+    if [[ -n "$docker_output" ]]; then
+      printf '%s\n' "$docker_output"
+    else
+      line "$ok" "docker" "daemon available / no containers"
+    fi
+  elif systemctl is-active --quiet docker.service 2>/dev/null && id -nG "$current_user" 2>/dev/null | grep -qw docker; then
+    line "$warn" "docker" "new login required for docker group"
+  else
+    line "$warn" "docker" "daemon unavailable"
+  fi
+fi
+if command -v podman >/dev/null 2>&1; then
+  podman ps --format 'podman  {{.Names}}  {{.Status}}' 2>/dev/null || true
+fi
+pgrep -a 'qemu|VirtualBox|ollama|lm-studio' 2>/dev/null || true

@@ -33,3 +33,9 @@ opt.pumblend = 0
 opt.winblend = 0
 opt.timeoutlen = 300
 opt.updatetime = 200
+opt.undofile = true
+opt.completeopt = "menu,menuone,noselect"
+opt.virtualedit = "block"
+opt.list = true
+opt.listchars = { tab = "» ", trail = "·", nbsp = "␣" }
+opt.fillchars = { eob = " " }

@@ -30,11 +30,11 @@ crtc 0
 mode 1920x1080
 pos 1920x0
 primary
-rate 74.97
+rate 60.00
 x-prop-non_desktop 0
 output DVI-I-1-1
 crtc 5
 mode 1920x1080
 pos 3840x0
-rate 144.00
+rate 60.00
 x-prop-non_desktop 0

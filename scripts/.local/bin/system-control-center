@@ -25,6 +25,8 @@ run_terminal() {
   local title="$1"
   local command="$2"
 
+  # The script is evaluated inside the spawned terminal, so the single quotes are intentional.
+  # shellcheck disable=SC2016
   env TERMINAL_TITLE="$title" TERMINAL_COMMAND="$command" alacritty --title "$title" -e bash -lc '
     export PATH="$HOME/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
     clear
@@ -62,6 +64,7 @@ main_menu() {
 system_menu() {
   case "$(menu "System" \
     "System Health" \
+    "Performance Health" \
     "Boot Analysis" \
     "Dock Health" \
     "System Modes" \
@@ -69,6 +72,7 @@ system_menu() {
     "File Manager" \
     "Keybind Cheatsheet")" in
     "System Health") run_terminal "SYSTEM HEALTH" 'system-health' ;;
+    "Performance Health") run_terminal "PERFORMANCE HEALTH" 'performance-health' ;;
     "Boot Analysis") run_terminal "BOOT ANALYSIS" 'boot-analysis' ;;
     "Dock Health") run_terminal "DOCK HEALTH" 'dock-health' ;;
     "System Modes") run_terminal "SYSTEM MODE" 'system-mode menu' ;;
@@ -184,6 +188,7 @@ security_menu() {
 }
 
 dotfiles_menu() {
+  # shellcheck disable=SC2016
   case "$(menu "Dotfiles" \
     "Edit Dotfiles" \
     "Git Status" \

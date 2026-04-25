@@ -3,18 +3,142 @@ set -euo pipefail
 
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
 LOG_FILE="$DOTFILES_DIR/install.log"
+
 DRY_RUN=0
-[[ "${1:-}" == "--dry-run" ]] && DRY_RUN=1
+UPGRADE_SYSTEM=1
+CONFIGURE_SERVICES=1
+INSTALL_VSCODE_EXTENSIONS=1
+ONLY_PHASES=""
+SKIP_PHASES=""
+
+ALL_PHASES=(
+  packages
+  aur
+  shell
+  dev
+  stow
+  system-configs
+  grub
+  services
+  dev-services
+  user-services
+  vscode
+  browser
+  theme
+  package-lists
+  verify
+)
+
+usage() {
+  cat <<'EOF'
+Usage: ./install.sh [options]
+
+Single full installer for this Arch Linux workstation.
+
+Options:
+  --dry-run                   Print commands without running them.
+  --only <phases>             Run only comma-separated phases.
+  --skip <phases>             Skip comma-separated phases.
+  --no-upgrade                Do not run a full pacman -Syu; install missing packages only.
+  --no-services               Install packages/configs, but do not initialize dev services.
+  --no-vscode-extensions      Skip VS Code extension installation.
+  --list-phases               Print available phases.
+  -h, --help                  Show this help.
+
+Phases:
+  packages, aur, shell, dev, stow, system-configs, grub, services,
+  dev-services, user-services, vscode, browser, theme, package-lists, verify
+EOF
+}
+
+list_phases() {
+  printf '%s\n' "${ALL_PHASES[@]}"
+}
+
+contains_csv() {
+  local csv="$1" needle="$2" item
+  IFS=',' read -r -a items <<< "$csv"
+  for item in "${items[@]}"; do
+    [[ "$item" == "$needle" ]] && return 0
+  done
+  return 1
+}
+
+phase_enabled() {
+  local phase="$1"
+  if [[ -n "$ONLY_PHASES" ]] && ! contains_csv "$ONLY_PHASES" "$phase"; then
+    return 1
+  fi
+  if [[ -n "$SKIP_PHASES" ]] && contains_csv "$SKIP_PHASES" "$phase"; then
+    return 1
+  fi
+  return 0
+}
+
+run_phase() {
+  local phase="$1"
+  shift
+  if phase_enabled "$phase"; then
+    printf '\n==> %s\n' "$phase"
+    "$@"
+  else
+    printf '\n==> %s skipped\n' "$phase"
+  fi
+}
+
+while (($#)); do
+  case "$1" in
+    --dry-run) DRY_RUN=1 ;;
+    --only)
+      shift
+      ONLY_PHASES="${1:-}"
+      [[ -n "$ONLY_PHASES" ]] || { echo "--only expects a comma-separated phase list." >&2; exit 2; }
+      ;;
+    --skip)
+      shift
+      SKIP_PHASES="${1:-}"
+      [[ -n "$SKIP_PHASES" ]] || { echo "--skip expects a comma-separated phase list." >&2; exit 2; }
+      ;;
+    --no-upgrade) UPGRADE_SYSTEM=0 ;;
+    --no-services) CONFIGURE_SERVICES=0 ;;
+    --no-vscode-extensions) INSTALL_VSCODE_EXTENSIONS=0 ;;
+    --list-phases)
+      list_phases
+      exit 0
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      printf 'Unknown option: %s\n\n' "$1" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+  shift
+done
 
 mkdir -p "$DOTFILES_DIR/backup" "$HOME/.cache/zsh" "$HOME/Pictures/Screenshots" "$HOME/.local/bin"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 run() {
   if [[ "$DRY_RUN" == 1 ]]; then
-    printf '[dry-run] %q ' "$@"; printf '\n'
+    printf '[dry-run]'
+    printf ' %q' "$@"
+    printf '\n'
   else
     "$@"
   fi
+}
+
+read_list() {
+  local file="$1"
+  awk '
+    /^[[:space:]]*#/ { next }
+    /^[[:space:]]*$/ { next }
+    { print $1 }
+  ' "$file"
 }
 
 require_arch() {
@@ -22,23 +146,16 @@ require_arch() {
 }
 
 install_pacman_packages() {
-  local packages=(
-    base-devel i3-wm autotiling-rs polybar rofi picom dunst alacritty zsh tmux
-    feh scrot imagemagick i3lock xss-lock xdg-utils xdotool slop
-    brightnessctl playerctl pipewire pipewire-pulse pavucontrol
-    network-manager-applet blueman neovim firefox thunar thunar-archive-plugin
-    thunar-volman tumbler ranger yazi ueberzug highlight atool w3m btop fastfetch
-    bat eza fd ripgrep fzf git-delta noto-fonts inter-font
-    ttf-jetbrains-mono-nerd papirus-icon-theme lxappearance flameshot autorandr
-    xorg-xrdb xorg-xrandr xclip stow ly tlp tlp-rdw bluez bluez-utils vulkan-radeon
-    libva-utils sof-firmware alsa-utils upower zsh-autosuggestions zsh-syntax-highlighting
-    rtkit wireless-regdb accountsservice xdg-desktop-portal xdg-desktop-portal-gtk
-    gvfs gvfs-mtp gvfs-gphoto2 polkit-gnome trash-cli file-roller zip unzip
-    7zip unrar ffmpegthumbnailer poppler-glib xdg-user-dirs noto-fonts-emoji
-    ttf-liberation man-db man-pages reflector pacman-contrib qt5ct qt6ct kvantum
-    xsettingsd dkms linux-headers linux-lts-headers ufw arch-audit lynis restic borg podman docker
-  )
-  run sudo pacman -Syu --needed --noconfirm "${packages[@]}"
+  local packages_file="$DOTFILES_DIR/packages/arch.txt"
+  local packages=()
+  mapfile -t packages < <(read_list "$packages_file")
+  ((${#packages[@]} > 0)) || return 0
+
+  if [[ "$UPGRADE_SYSTEM" == 1 ]]; then
+    run sudo pacman -Syu --needed --noconfirm "${packages[@]}"
+  else
+    run sudo pacman -S --needed --noconfirm "${packages[@]}"
+  fi
 }
 
 ensure_yay() {
@@ -50,8 +167,12 @@ ensure_yay() {
 }
 
 install_aur_packages() {
-  ensure_yay || return 0
-  run yay -S --needed --noconfirm xidlehook bibata-cursor-theme gruvbox-dark-gtk zsh-theme-powerlevel10k-git thinkfan zen-browser-bin displaylink evdi-dkms timeshift
+  local packages_file="$DOTFILES_DIR/packages/aur.txt"
+  local packages=()
+  mapfile -t packages < <(read_list "$packages_file")
+  ((${#packages[@]} > 0)) || return 0
+  ensure_yay
+  run yay -S --needed --noconfirm "${packages[@]}"
 }
 
 clone_if_missing() {
@@ -81,10 +202,54 @@ setup_shell_tools() {
   clone_if_missing https://github.com/zsh-users/zsh-syntax-highlighting.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
   clone_if_missing https://github.com/romkatv/powerlevel10k.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
   clone_if_missing https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
+
   local zsh_path
   zsh_path="$(resolve_login_shell || true)"
   if [[ -n "$zsh_path" && "$(getent passwd "$USER" | cut -d: -f7)" != "$zsh_path" ]]; then
     run sudo chsh -s "$zsh_path" "$USER"
+  fi
+}
+
+setup_development_environment() {
+  local zshenv="$HOME/.config/zsh/dev-tools.zsh"
+  run mkdir -p "$(dirname "$zshenv")"
+
+  if [[ "$DRY_RUN" == 1 ]]; then
+    echo "[dry-run] write $zshenv"
+  else
+    cat > "$zshenv" <<'EOF'
+# Development toolchain environment
+export NVM_DIR="$HOME/.nvm"
+[[ -s /usr/share/nvm/init-nvm.sh ]] && source /usr/share/nvm/init-nvm.sh
+
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d "$PYENV_ROOT/bin" ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+command -v pyenv >/dev/null 2>&1 && eval "$(pyenv init -)"
+
+command -v mise >/dev/null 2>&1 && eval "$(mise activate zsh)"
+command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init zsh)"
+command -v atuin >/dev/null 2>&1 && eval "$(atuin init zsh)"
+command -v direnv >/dev/null 2>&1 && eval "$(direnv hook zsh)"
+
+export ANDROID_HOME="$HOME/Android/Sdk"
+export ANDROID_SDK_ROOT="$ANDROID_HOME"
+[[ -d "$ANDROID_HOME/emulator" ]] && export PATH="$ANDROID_HOME/emulator:$PATH"
+[[ -d "$ANDROID_HOME/platform-tools" ]] && export PATH="$ANDROID_HOME/platform-tools:$PATH"
+[[ -d "$ANDROID_HOME/cmdline-tools/latest/bin" ]] && export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+
+export CHROME_EXECUTABLE="${CHROME_EXECUTABLE:-/usr/bin/chromium}"
+EOF
+  fi
+
+  local zshrc="$HOME/.zshrc"
+  # shellcheck disable=SC2016
+  local source_line='[[ -r "$HOME/.config/zsh/dev-tools.zsh" ]] && source "$HOME/.config/zsh/dev-tools.zsh"'
+  if [[ -f "$zshrc" ]] && ! grep -Fq "$source_line" "$zshrc"; then
+    if [[ "$DRY_RUN" == 1 ]]; then
+      echo "[dry-run] append dev-tools source line to $zshrc"
+    else
+      printf '\n%s\n' "$source_line" >> "$zshrc"
+    fi
   fi
 }
 
@@ -102,7 +267,7 @@ backup_package_targets() {
   local package_dir="$DOTFILES_DIR/$package"
   [[ -d "$package_dir" ]] || return 0
   while IFS= read -r -d '' src; do
-    local rel="${src#$package_dir/}"
+    local rel="${src#"$package_dir"/}"
     local target="$target_root/$rel"
     if [[ -e "$target" || -L "$target" ]]; then
       if [[ "$(readlink -f "$target")" == "$(readlink -f "$src")" ]]; then
@@ -122,14 +287,20 @@ ensure_materialized_dir() {
 }
 
 stow_home() {
-  local backup_root="$DOTFILES_DIR/backup/$(date +%Y%m%d-%H%M%S)"
-  # These targets receive generated state at runtime and must remain real directories.
+  local backup_root
+  backup_root="$DOTFILES_DIR/backup/$(date +%Y%m%d-%H%M%S)"
   ensure_materialized_dir "$HOME/.config/systemd"
   ensure_materialized_dir "$HOME/.config/systemd/user"
   ensure_materialized_dir "$HOME/.config/systemd/user/default.target.wants"
   ensure_materialized_dir "$HOME/.config/systemd/user/timers.target.wants"
   ensure_materialized_dir "$HOME/.local/share/applications"
-  local packages=(i3 polybar rofi picom dunst alacritty tmux zsh git nvim btop fastfetch ranger yazi gtk qt profile xresources xsettingsd scripts browser systemd autorandr wallpaper wireplumber portal)
+
+  local packages=(
+    i3 polybar rofi picom dunst alacritty tmux zsh git nvim btop fastfetch
+    ranger yazi gtk qt profile xresources xsettingsd scripts browser systemd
+    autorandr wallpaper wireplumber portal
+  )
+
   for pkg in "${packages[@]}"; do
     backup_package_targets "$pkg" "$HOME" "$backup_root"
     run stow -v -d "$DOTFILES_DIR" -t "$HOME" "$pkg"
@@ -137,7 +308,8 @@ stow_home() {
 }
 
 install_system_configs() {
-  local backup_root="$DOTFILES_DIR/backup/system-$(date +%Y%m%d-%H%M%S)"
+  local backup_root
+  backup_root="$DOTFILES_DIR/backup/system-$(date +%Y%m%d-%H%M%S)"
   local pairs=(
     "$DOTFILES_DIR/ly/etc/ly/config.ini:/etc/ly/config.ini"
     "$DOTFILES_DIR/tlp/etc/tlp.d/01-thinkpad-e14-amd.conf:/etc/tlp.d/01-thinkpad-e14-amd.conf"
@@ -148,11 +320,17 @@ install_system_configs() {
     "$DOTFILES_DIR/lm_sensors/etc/sensors.d/thinkpad-isa.conf:/etc/sensors.d/thinkpad-isa.conf"
     "$DOTFILES_DIR/bluetooth/etc/bluetooth/main.conf:/etc/bluetooth/main.conf"
     "$DOTFILES_DIR/zram/etc/systemd/zram-generator.conf:/etc/systemd/zram-generator.conf"
+    "$DOTFILES_DIR/displaylink/etc/udev/rules.d/40-monitor-hotplug.rules:/etc/udev/rules.d/40-monitor-hotplug.rules"
   )
+
   for pair in "${pairs[@]}"; do
     local src="${pair%%:*}"
     local dst="${pair#*:}"
     if [[ -e "$dst" || -L "$dst" ]]; then
+      if cmp -s "$src" "$dst"; then
+        printf 'unchanged %s\n' "$dst"
+        continue
+      fi
       run sudo mkdir -p "$backup_root/$(dirname "${dst#/}")"
       run sudo mv "$dst" "$backup_root/${dst#/}"
     fi
@@ -208,6 +386,8 @@ enable_services() {
   run sudo systemctl enable fstrim.timer
   run sudo systemctl enable lm_sensors.service
   run sudo systemctl enable thinkfan.service thinkfan-sleep.service thinkfan-wakeup.service
+  run sudo usermod -aG docker "$USER"
+  run sudo systemctl enable docker.service
   if systemctl list-unit-files displaylink.service >/dev/null 2>&1; then
     run sudo systemctl enable displaylink.service
   fi
@@ -219,6 +399,26 @@ enable_services() {
   run sudo systemctl enable ly@tty2.service
 }
 
+configure_dev_services() {
+  [[ "$CONFIGURE_SERVICES" == 1 ]] || return 0
+
+  if [[ ! -d /var/lib/postgres/data/base ]]; then
+    run sudo -iu postgres initdb -D /var/lib/postgres/data
+  fi
+  run sudo systemctl disable postgresql.service
+
+  if [[ ! -d /var/lib/mysql/mysql ]]; then
+    run sudo mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
+  fi
+  run sudo systemctl disable mariadb.service
+
+  for service in mongodb.service mongod.service ollama.service; do
+    if systemctl list-unit-files "$service" >/dev/null 2>&1; then
+      run sudo systemctl disable "$service"
+    fi
+  done
+}
+
 enable_user_services() {
   if [[ -f "$HOME/.config/systemd/user/xsettingsd.service" ]]; then
     run systemctl --user daemon-reload
@@ -228,6 +428,21 @@ enable_user_services() {
     run systemctl --user daemon-reload
     run systemctl --user enable --now dotfiles-maintenance.timer || true
   fi
+}
+
+install_vscode_extensions() {
+  [[ "$INSTALL_VSCODE_EXTENSIONS" == 1 ]] || return 0
+  [[ "$DRY_RUN" == 1 ]] || command -v code >/dev/null 2>&1 || {
+    echo "VS Code command 'code' not found; skipping extensions."
+    return 0
+  }
+
+  local extensions=()
+  mapfile -t extensions < <(read_list "$DOTFILES_DIR/vscode/extensions.txt")
+  local ext
+  for ext in "${extensions[@]}"; do
+    run code --install-extension "$ext"
+  done
 }
 
 apply_browser_preferences() {
@@ -266,19 +481,73 @@ apply_user_settings() {
   command -v update-desktop-database >/dev/null 2>&1 && run update-desktop-database "$HOME/.local/share/applications" || true
 }
 
-main() {
-  require_arch
-  install_pacman_packages
-  install_aur_packages || echo "AUR package install skipped or failed; continuing."
-  setup_shell_tools
-  stow_home
-  install_system_configs
-  install_grub_theme
-  enable_services
-  enable_user_services
-  apply_browser_preferences
-  apply_user_settings
-  echo "Done. Reboot to load boot, display manager and power-management changes."
+refresh_package_lists() {
+  command -v pacman >/dev/null 2>&1 || return 0
+  run mkdir -p "$DOTFILES_DIR/backup"
+  if [[ "$DRY_RUN" == 1 ]]; then
+    echo "[dry-run] refresh backup/pkglist.txt and backup/aur-pkglist.txt"
+  else
+    pacman -Qqe | sort > "$DOTFILES_DIR/backup/pkglist.txt"
+    pacman -Qqm | sort > "$DOTFILES_DIR/backup/aur-pkglist.txt"
+  fi
 }
 
-main "$@"
+verify_installation() {
+  bash -n "$DOTFILES_DIR/install.sh"
+  if command -v shellcheck >/dev/null 2>&1; then
+    shellcheck "$DOTFILES_DIR/install.sh" || true
+  fi
+  if [[ -x "$DOTFILES_DIR/scripts/.local/bin/dotfiles-secret-scan" ]]; then
+    "$DOTFILES_DIR/scripts/.local/bin/dotfiles-secret-scan" "$DOTFILES_DIR"
+  fi
+  if [[ -x "$DOTFILES_DIR/scripts/.local/bin/dotfiles-doctor" ]]; then
+    "$DOTFILES_DIR/scripts/.local/bin/dotfiles-doctor"
+  fi
+  if [[ -x "$DOTFILES_DIR/scripts/.local/bin/dock-health" ]]; then
+    "$DOTFILES_DIR/scripts/.local/bin/dock-health" || true
+  fi
+  if [[ -x "$DOTFILES_DIR/scripts/.local/bin/performance-health" ]]; then
+    "$DOTFILES_DIR/scripts/.local/bin/performance-health" || true
+  fi
+  systemctl --failed --no-pager || true
+  dkms status || true
+}
+
+print_next_steps() {
+  cat <<'EOF'
+
+Installation finished.
+
+Recommended checks after opening a new terminal:
+- nvm --version
+- pyenv --version
+- mise --version
+- docker version
+- flutter doctor
+
+Development services are installed for on-demand use through system-control-center.
+Reboot to load boot, display manager, kernel, DKMS and power-management changes cleanly.
+EOF
+}
+
+main() {
+  require_arch
+  run_phase packages install_pacman_packages
+  run_phase aur install_aur_packages
+  run_phase shell setup_shell_tools
+  run_phase dev setup_development_environment
+  run_phase stow stow_home
+  run_phase system-configs install_system_configs
+  run_phase grub install_grub_theme
+  run_phase services enable_services
+  run_phase dev-services configure_dev_services
+  run_phase user-services enable_user_services
+  run_phase vscode install_vscode_extensions
+  run_phase browser apply_browser_preferences
+  run_phase theme apply_user_settings
+  run_phase package-lists refresh_package_lists
+  run_phase verify verify_installation
+  print_next_steps
+}
+
+main

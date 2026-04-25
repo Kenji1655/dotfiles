@@ -10,7 +10,20 @@ Install base Arch first, boot into the new user, then run:
 sudo pacman -Syu --needed git
 git clone https://github.com/YOUR_USER/YOUR_REPO.git ~/.dotfiles
 cd ~/.dotfiles
-./bootstrap.sh
+./install.sh
+```
+
+For a safer rerun without upgrading the whole system:
+
+```bash
+./install.sh --no-upgrade
+```
+
+Run a single phase:
+
+```bash
+./install.sh --only verify
+./install.sh --only packages,aur --no-upgrade
 ```
 
 Reboot after the installer finishes:
@@ -22,7 +35,9 @@ sudo reboot
 ## What The Installer Does
 
 - Installs i3, Polybar, Rofi, Picom, Dunst, Alacritty, Thunar, Firefox, fonts, GTK/Qt theme tools, TLP, thinkfan and common desktop utilities.
-- Installs AUR packages through `yay`, including Gruvbox GTK, Bibata cursor, Zen Browser, thinkfan, DisplayLink and EVDI.
+- Installs development tooling for JS/TS, Python, Rust, Go, Java, .NET, C/C++, Docker/Podman, databases, Android/Flutter, cloud CLIs and Kubernetes.
+- Installs AUR packages through `yay`, including Gruvbox GTK, Bibata cursor, Zen Browser, DisplayLink, EVDI, VS Code, Postman, Android Studio, Flutter, MongoDB and LM Studio.
+- Reads package lists from `packages/arch.txt`, `packages/aur.txt` and `vscode/extensions.txt`.
 - Stows home config packages into `~`.
 - Installs system configs for TLP, thinkfan, bluetooth and Ly.
 - Enables system services.
@@ -39,32 +54,6 @@ sudo reboot
 - Run `dotfiles-secret-scan` before pushing to GitHub.
 - Run `system-health` after restoring to verify services, symlinks, displays, sensors and GRUB theme.
 
-## Ubuntu 24.04.x
-
-For Ubuntu 24.04.x, use the Ubuntu-specific installer instead of the Arch installer:
-
-```bash
-sudo apt update
-sudo apt install -y git
-git clone https://github.com/YOUR_USER/YOUR_REPO.git ~/.dotfiles
-cd ~/.dotfiles
-./bootstrap.sh
-```
-
-Optional laptop packages such as TLP and thinkfan can be installed with:
-
-```bash
-./install-ubuntu-24.04.sh --optional
-```
-
-The Ubuntu installer intentionally does not apply the Arch-origin TLP/thinkfan system configs automatically and does not install DisplayLink by default. Review those manually per machine.
-
-After it finishes, reboot and choose the `i3` session on the login screen:
-
-```bash
-sudo reboot
-```
-
 ## Useful Commands
 
 Update dotfiles snapshot:
@@ -73,11 +62,11 @@ Update dotfiles snapshot:
 backup-dotfiles
 ```
 
-Reapply all dotfiles:
+Reapply packages, system configs and dotfiles:
 
 ```bash
 cd ~/.dotfiles
-./restore.sh
+./install.sh
 ```
 
 Run the system doctor:

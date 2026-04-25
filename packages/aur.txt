@@ -1,0 +1,21 @@
+# Desktop and hardware
+xidlehook
+bibata-cursor-theme
+gruvbox-dark-gtk
+zsh-theme-powerlevel10k-git
+thinkfan
+zen-browser-bin
+displaylink
+evdi-dkms
+
+# Development apps and tooling
+google-cloud-cli
+android-studio
+flutter
+visual-studio-code-bin
+postman-bin
+insomnia-bin
+figma-linux
+lmstudio-bin
+mongodb-bin
+mongodb-compass-bin

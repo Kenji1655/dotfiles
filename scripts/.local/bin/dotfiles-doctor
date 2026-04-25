@@ -82,9 +82,27 @@ printf "DOTFILES DOCTOR\n"
 printf "Repo: %s\n\n" "$dotfiles"
 
 printf "== Commands ==\n"
-for cmd in i3 polybar rofi picom dunst alacritty tmux nvim yazi feh flameshot autorandr xrandr xinput pactl sensors dock-health security-check system-mode dev-stack-manager dev-db backup-real snapshot-manager; do
+for cmd in i3 polybar rofi picom dunst alacritty tmux nvim yazi feh flameshot autorandr xrandr xinput pactl sensors dock-health security-check performance-health system-mode dev-stack-manager dev-db backup-real snapshot-manager; do
   check_command "$cmd"
 done
+
+printf "\n== Development Commands ==\n"
+for cmd in node npm pnpm yarn python pip pipx pyenv mise rustc cargo rust-analyzer go java javac mvn gradle dotnet mono cmake ninja bear clang clang++ lldb gdb valgrind lazygit zoxide atuin direnv shellcheck shfmt stylua prettier eslint black ruff mypy lua-language-server typescript-language-server bash-language-server yaml-language-server taplo docker docker-compose podman psql mariadb adb fastboot flutter ollama code gh kubectl helm terraform aws az gcloud; do
+  check_command "$cmd"
+done
+
+if [[ -s /usr/share/nvm/init-nvm.sh ]]; then
+  # nvm is a shell function on Arch, not a standalone executable.
+  # shellcheck disable=SC1091
+  source /usr/share/nvm/init-nvm.sh
+  if type nvm >/dev/null 2>&1; then
+    print_status ok "nvm" "shell function"
+  else
+    print_status fail "nvm" "not loaded"
+  fi
+else
+  print_status fail "nvm" "init script missing"
+fi
 
 printf "\n== Symlinks ==\n"
 for path in \
@@ -149,7 +167,11 @@ done
 printf "\n== Display ==\n"
 if [[ -n "${DISPLAY:-}" ]] && command -v xrandr >/dev/null 2>&1; then
   connected="$(xrandr --query 2>/dev/null | awk '/ connected/ {print $1}' | paste -sd ' ' -)"
-  [[ -n "$connected" ]] && print_status ok "monitors" "$connected" || print_status warn "monitors" "none detected"
+  if [[ -n "$connected" ]]; then
+    print_status ok "monitors" "$connected"
+  else
+    print_status warn "monitors" "none detected"
+  fi
 else
   print_status warn "DISPLAY" "not available"
 fi
@@ -162,7 +184,11 @@ fi
 
 if command -v autorandr >/dev/null 2>&1; then
   current_profile="$(autorandr --current 2>/dev/null | paste -sd ' ' -)"
-  [[ -n "$current_profile" ]] && print_status ok "autorandr" "$current_profile" || print_status warn "autorandr" "no current profile"
+  if [[ -n "$current_profile" ]]; then
+    print_status ok "autorandr" "$current_profile"
+  else
+    print_status warn "autorandr" "no current profile"
+  fi
 fi
 
 printf "\n== Power And Sensors ==\n"
@@ -225,11 +251,19 @@ if [[ -d "$dotfiles/.git" ]]; then
     print_status warn "dotfiles git" "dirty"
   fi
   remote="$(git -C "$dotfiles" remote get-url origin 2>/dev/null || true)"
-  [[ -n "$remote" ]] && print_status ok "origin" "$remote" || print_status warn "origin" "not configured"
+  if [[ -n "$remote" ]]; then
+    print_status ok "origin" "$remote"
+  else
+    print_status warn "origin" "not configured"
+  fi
   upstream="$(git -C "$dotfiles" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)"
   if [[ -n "$upstream" ]]; then
     ahead="$(git -C "$dotfiles" rev-list --count "$upstream"..HEAD 2>/dev/null || printf 0)"
-    [[ "$ahead" == "0" ]] && print_status ok "unpushed commits" "0" || print_status warn "unpushed commits" "$ahead"
+    if [[ "$ahead" == "0" ]]; then
+      print_status ok "unpushed commits" "0"
+    else
+      print_status warn "unpushed commits" "$ahead"
+    fi
   else
     print_status warn "upstream" "not configured"
   fi

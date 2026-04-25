@@ -1,0 +1,7 @@
+# Override autorandr's package rule from /usr/lib/udev/rules.d.
+#
+# DisplayLink/EVDI can emit many DRM change events while USB-C docks and
+# monitors are still being enumerated. Running autorandr automatically during
+# that window previously raced DisplayLink and preceded EVDI DRM commit
+# timeouts. Monitor layouts should be applied manually through monitor-manager
+# after the dock has settled.

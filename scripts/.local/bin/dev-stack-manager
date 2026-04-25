@@ -7,6 +7,8 @@ export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
 run_terminal() {
   local title="$1"
   local command="$2"
+  # The script is evaluated inside the spawned terminal, so the single quotes are intentional.
+  # shellcheck disable=SC2016
   env TERMINAL_TITLE="$title" TERMINAL_COMMAND="$command" alacritty --title "$title" -e bash -lc '
     export PATH="$HOME/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
     clear
@@ -20,10 +22,16 @@ run_terminal() {
   '
 }
 
+# shellcheck disable=SC2016
 check_cmd='
+[[ -s /usr/share/nvm/init-nvm.sh ]] && source /usr/share/nvm/init-nvm.sh
 for cmd in node npm nvm python pyenv mise java javac rustc cargo go gcc g++ dotnet nvim code; do
   printf "%-12s" "$cmd"
-  command -v "$cmd" || true
+  if [[ "$cmd" == "nvm" ]]; then
+    type nvm 2>/dev/null | sed -n "1p" || true
+  else
+    command -v "$cmd" || true
+  fi
 done
 '
 

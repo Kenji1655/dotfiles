@@ -1,7 +1,7 @@
 # LazyVim setup
 
 Main config lives in `.config/nvim`, with LazyVim, Gruvbox, LSP, formatting, linting,
-testing, debugging, Git, database tooling, and AI terminals.
+testing, debugging, Git, database tooling, Docker/Terraform support, and AI terminals.
 
 ## Main Keybindings
 
@@ -12,6 +12,15 @@ testing, debugging, Git, database tooling, and AI terminals.
 - `<leader>as`: open a shell in a floating terminal
 - `:Codex`: open Codex CLI
 - `:Claude`: open Claude Code CLI
+
+### Search And Navigation
+
+- `<leader>ff`: find files in project
+- `<leader>fF`: find files in current working directory
+- `<leader>sg`: grep project
+- `<leader>sG`: grep current working directory
+- `<leader>sd`: workspace diagnostics
+- `<leader>sD`: buffer diagnostics
 
 ### Debug
 
@@ -24,6 +33,8 @@ testing, debugging, Git, database tooling, and AI terminals.
 - `<leader>do`: step out
 - `<leader>du`: open/close DAP UI
 - `<leader>dt`: terminate session
+- `<leader>dR`: toggle DAP REPL
+- `<leader>dx`: terminate debug session
 
 Native debugging uses `lldb-dap` for C, C++ and Rust.
 
@@ -86,3 +97,4 @@ Then use `:DB $DATABASE_URL`.
 - `go` para Go
 - `dotnet` para C#
 - `python` e `pytest` para Python
+- `docker`, `podman`, `terraform`, `kubectl`, `helm` for infra/devops projects

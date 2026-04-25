@@ -27,11 +27,24 @@ else
   status_line "$warn" "evdi module" "not loaded"
 fi
 
-if pgrep -f '/usr/lib/displaylink/DisplayLinkManager' >/dev/null 2>&1; then
-  cpu="$(ps -p "$(pgrep -f '/usr/lib/displaylink/DisplayLinkManager' | head -n 1)" -o %cpu= 2>/dev/null | awk '{sum += $1} END {printf "%.1f%%", sum + 0}')"
+displaylink_pid="$(systemctl show -p MainPID --value displaylink.service 2>/dev/null || true)"
+if [[ "${displaylink_pid:-0}" =~ ^[0-9]+$ ]] && ((displaylink_pid > 0)); then
+  cpu="$(ps -p "$displaylink_pid" -o %cpu= 2>/dev/null | awk '{sum += $1} END {printf "%.1f%%", sum + 0}')"
   status_line "$ok" "DisplayLinkManager" "running / CPU $cpu"
 else
   status_line "$fail" "DisplayLinkManager" "not running"
+fi
+
+if [[ -f /etc/udev/rules.d/40-monitor-hotplug.rules ]] && ! grep -q 'systemctl start --no-block autorandr.service' /etc/udev/rules.d/40-monitor-hotplug.rules 2>/dev/null; then
+  status_line "$ok" "autorandr hotplug" "disabled"
+else
+  status_line "$warn" "autorandr hotplug" "package rule may be active"
+fi
+
+if journalctl -b -k --no-pager 2>/dev/null | grep -Eq 'flip_done timed out|commit wait timed out'; then
+  status_line "$fail" "EVDI DRM timeouts" "present in current boot"
+else
+  status_line "$ok" "EVDI DRM timeouts" "none in current boot"
 fi
 
 printf '\n== Monitors ==\n'

@@ -56,25 +56,22 @@ A fullstack and mobile development workstation, tuned end to end.
 sudo pacman -Syu --needed git
 git clone https://github.com/Kenji1655/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
-./bootstrap.sh
+./install.sh
 sudo reboot
 ```
 
-**Ubuntu 24.04**
+**Preview without changing the system**
 
 ```bash
-sudo apt update
-sudo apt install -y git
-git clone https://github.com/Kenji1655/dotfiles.git ~/.dotfiles
-cd ~/.dotfiles
-./bootstrap.sh
-sudo reboot
+cd ~/.dotfiles && ./install.sh --dry-run
 ```
 
-**Restore only user configs** (no packages reinstalled)
+**Run one phase only**
 
 ```bash
-cd ~/.dotfiles && ./restore.sh
+./install.sh --only verify
+./install.sh --only packages,aur --no-upgrade
+./install.sh --skip vscode,grub
 ```
 
 **Run a health check**
@@ -97,10 +94,10 @@ cd ~/.dotfiles && ./doctor.sh
   autorandr, wireplumber, bluetooth    hardware
   browser, portal, profile             desktop integration
   grub                                 bootloader theme
+  packages, vscode                     declarative install lists
   scripts                              ~/.local/bin helpers
   backup, system-notes                 package lists and notes
-  bootstrap.sh, restore.sh             entry points
-  install.sh, install-ubuntu-24.04.sh
+  install.sh                           single full installer
   doctor.sh                            health check
   README, RECOVERY, REINSTALL, DEV_ENVIRONMENT
 ```
@@ -118,6 +115,7 @@ cd ~/.dotfiles && ./doctor.sh
 | `dotfiles-doctor` | Commands, symlinks, services, display, power, GRUB and git state |
 | `boot-analysis` | Boot time, slow units and critical chain |
 | `dock-health` | DisplayLink, EVDI, monitors, autorandr and Polybar |
+| `performance-health` | CPU, TLP, zram, swap, storage, boot, heavy processes and containers |
 | `system-mode` | Toggle Work, Battery, Dock, Focus, Dev and Normal |
 | `system-maintenance` | Clean build caches, prune pacman cache, drop debug orphans |
 
@@ -190,6 +188,9 @@ cd ~/.dotfiles && ./doctor.sh
 ## Monitor Profiles
 
 Manage displays with `monitor-manager` or through the control center.
+Automatic autorandr hotplug is disabled because DisplayLink/EVDI can emit
+unstable DRM events while a dock is still enumerating. Apply profiles manually
+after connecting the dock.
 
 Recommended profile names: `notebook`, `dock-dual`, `dock-single`, `presentation`.
 
@@ -204,7 +205,7 @@ monitor-manager detect             # auto-detect and apply
 
 ## Development
 
-Setup lives in `install-dev-environment`, fully documented in [`DEV_ENVIRONMENT.md`](DEV_ENVIRONMENT.md).
+Development setup is part of the single `./install.sh` flow and is documented in [`DEV_ENVIRONMENT.md`](DEV_ENVIRONMENT.md).
 
 **Languages and Frameworks**
 
@@ -279,6 +280,12 @@ backup-real
 
 Recovery steps live in [`RECOVERY.md`](RECOVERY.md).
 
+**Performance check**
+
+```bash
+performance-health
+```
+
 ---
 
 ## Control Center
@@ -352,8 +359,10 @@ git push -u origin main
 
 ## Notes
 
-- **Firefox and Zen** profiles must exist before browser preferences apply. Open each browser once, then rerun `./restore.sh` or `./install.sh`.
-- **DisplayLink** usually needs a reboot after DKMS/EVDI updates.
+- **Firefox and Zen** profiles must exist before browser preferences apply. Open each browser once, then rerun `./install.sh`.
+- **DisplayLink** is intentionally conservative: automatic autorandr hotplug is disabled, dock profiles use 60 Hz, and monitor layouts should be applied manually after the dock settles.
+- **Docker and Podman** are both installed. Docker is for compatibility with mainstream dev tooling; Podman is preferred for rootless local database containers through `dev-db`.
+- **Installer phases** are listed with `./install.sh --list-phases`.
 - **tmux** plugins install with `Ctrl+a` then `I`.
 - **Wallpapers** live wherever you want; the picker defaults to common image folders and uses `feh`.
 - **Local backups and package lists** live under `backup/`.

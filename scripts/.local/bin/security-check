@@ -3,7 +3,6 @@ set -uo pipefail
 
 ok=$'\033[32mOK\033[0m'
 warn=$'\033[33mWARN\033[0m'
-fail=$'\033[31mFAIL\033[0m'
 
 line() {
   printf '%b    %-22s %s\n' "$1" "$2" "${3:-}"
