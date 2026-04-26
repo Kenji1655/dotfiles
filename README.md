@@ -29,6 +29,7 @@ A fullstack and mobile development workstation, tuned end to end.
 - [Keybindings](#keybindings)
 - [Monitor Profiles](#monitor-profiles)
 - [Development](#development)
+- [Operations](#operations)
 - [Maintenance](#maintenance)
 - [Control Center](#control-center)
 - [Theme](#theme)
@@ -59,6 +60,14 @@ git clone https://github.com/Kenji1655/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 ./install.sh
 sudo reboot
+```
+
+After Stow is applied, the main operational command is:
+
+```bash
+dotfiles help
+dotfiles verify
+dotfiles status
 ```
 
 **Preview without changing the system**
@@ -152,6 +161,7 @@ because they require root ownership and should be gated by the active profile.
 | Command | Purpose |
 | --- | --- |
 | `system-control-center` | Categorized Rofi control panel |
+| `dotfiles` | Main CLI for install, verify, inventory, checks, backup and git status |
 | `system-health` | Health check alias for `dotfiles-doctor` |
 | `dotfiles-doctor` | Commands, symlinks, services, display, power, GRUB and git state |
 | `dotfiles-inventory` | Read-only inventory of profile, package lists, Stow modules and local commands |
@@ -167,6 +177,7 @@ because they require root ownership and should be gated by the active profile.
 | --- | --- |
 | `backup-dotfiles` | Update package lists and commit a snapshot |
 | `backup-real` | Run Restic or Borg backup after configuring a repository |
+| `backup-health` | Verify backup config, covered paths and latest Restic/Borg snapshot |
 | `browser-state` | Show browser profiles, critical state files and backup readiness |
 | `snapshot-manager` | Create Timeshift or Snapper checkpoints |
 | `security-check` | Firewall, SSH, listening ports, audit tools |
@@ -293,6 +304,38 @@ dev-stack-manager
 
 ---
 
+## Operations
+
+Day-to-day operation should go through the main CLI:
+
+```bash
+dotfiles status       # git state and recent commits
+dotfiles inventory    # profile, package lists, stow modules and commands
+dotfiles check        # local syntax, ShellCheck, inventory and secret scan
+dotfiles verify       # full repo/system verification phase
+dotfiles backup-health
+```
+
+Before reinstalling or making larger refactors:
+
+```bash
+dotfiles check
+backup-real --list-paths
+backup-real --dry-run
+browser-state
+```
+
+Installer logs are written to:
+
+```text
+~/.local/state/dotfiles/install-YYYYmmdd-HHMMSS.log
+```
+
+The repository intentionally avoids storing browser sessions, cookies, tokens,
+saved logins and local keyrings. Those belong in encrypted Restic/Borg backups.
+
+---
+
 ## Maintenance
 
 The Arch installer enables:
@@ -311,6 +354,7 @@ system-maintenance all
 
 ```bash
 dotfiles-inventory
+dotfiles check
 ```
 
 Also exposed in the control center as `System Maintenance`.

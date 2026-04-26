@@ -1,7 +1,39 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+DRY_RUN=0
+LIST_PATHS=0
 config_file="${BACKUP_REAL_CONFIG:-$HOME/.config/backup/backup-real.env}"
+
+usage() {
+  cat <<'EOF'
+Usage: backup-real [options]
+
+Back up personal data and browser state using Restic or Borg.
+
+Options:
+  --dry-run      Print what would be backed up without running Restic/Borg.
+  --list-paths   Print included and excluded paths.
+  -h, --help     Show this help.
+EOF
+}
+
+while (($#)); do
+  case "$1" in
+    --dry-run) DRY_RUN=1 ;;
+    --list-paths) LIST_PATHS=1 ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      printf 'Unknown option: %s\n\n' "$1" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+  shift
+done
 
 if [[ -f "$config_file" ]]; then
   # shellcheck disable=SC1090
@@ -45,23 +77,46 @@ for path in "${excludes[@]}"; do
   exclude_args+=(--exclude "$path")
 done
 
-if command -v restic >/dev/null 2>&1; then
-  if [[ -z "${RESTIC_REPOSITORY:-}" ]]; then
-    printf 'RESTIC_REPOSITORY is not set.\n' >&2
-    printf 'Example: export RESTIC_REPOSITORY=/run/media/kenji/Backup/restic\n' >&2
-    exit 2
+if [[ "$LIST_PATHS" == 1 || "$DRY_RUN" == 1 ]]; then
+  printf 'Included paths:\n'
+  printf '  %s\n' "${existing[@]}"
+  printf '\nExcluded patterns:\n'
+  printf '  %s\n' "${excludes[@]}"
+fi
+
+if [[ "$LIST_PATHS" == 1 ]]; then
+  exit 0
+fi
+
+if [[ "$DRY_RUN" == 1 && -z "${RESTIC_REPOSITORY:-}" && -z "${BORG_REPO:-}" ]]; then
+  printf '\nNo backup target configured yet. Set RESTIC_REPOSITORY or BORG_REPO in %s.\n' "$config_file"
+  exit 0
+fi
+
+if [[ -n "${RESTIC_REPOSITORY:-}" ]]; then
+  if ! command -v restic >/dev/null 2>&1; then
+    printf 'RESTIC_REPOSITORY is configured, but restic is not installed.\n' >&2
+    exit 1
+  fi
+  if [[ "$DRY_RUN" == 1 ]]; then
+    printf '\nWould run: restic backup [excludes] [included paths]\n'
+    exit 0
   fi
   exec restic backup "${exclude_args[@]}" "${existing[@]}"
 fi
 
-if command -v borg >/dev/null 2>&1; then
-  if [[ -z "${BORG_REPO:-}" ]]; then
-    printf 'BORG_REPO is not set.\n' >&2
-    printf 'Example: export BORG_REPO=/run/media/kenji/Backup/borg::thinkpad-{now}\n' >&2
-    exit 2
+if [[ -n "${BORG_REPO:-}" ]]; then
+  if ! command -v borg >/dev/null 2>&1; then
+    printf 'BORG_REPO is configured, but borg is not installed.\n' >&2
+    exit 1
+  fi
+  if [[ "$DRY_RUN" == 1 ]]; then
+    printf '\nWould run: borg create --stats [excludes] %s [included paths]\n' "$BORG_REPO"
+    exit 0
   fi
   exec borg create --stats "${exclude_args[@]}" "$BORG_REPO" "${existing[@]}"
 fi
 
-printf 'No backup tool found. Install restic or borg.\n' >&2
-exit 1
+printf 'No backup target configured.\n' >&2
+printf 'Set RESTIC_REPOSITORY or BORG_REPO in %s.\n' "$config_file" >&2
+exit 2

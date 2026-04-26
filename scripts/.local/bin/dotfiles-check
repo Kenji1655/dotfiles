@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
+
+printf 'DOTFILES CHECK\n\n'
+
+printf '== Bash Syntax ==\n'
+bash -n "$dotfiles/install.sh" "$dotfiles"/scripts/.local/bin/* "$dotfiles/doctor.sh" \
+  "$dotfiles/polybar/.config/polybar/launch.sh" \
+  "$dotfiles/rofi/.config/rofi/power-menu.sh"
+printf 'OK\n'
+
+if command -v shellcheck >/dev/null 2>&1; then
+  printf '\n== ShellCheck ==\n'
+  shellcheck "$dotfiles/install.sh" "$dotfiles"/scripts/.local/bin/* "$dotfiles/doctor.sh" \
+    "$dotfiles/polybar/.config/polybar/launch.sh" \
+    "$dotfiles/rofi/.config/rofi/power-menu.sh"
+  printf 'OK\n'
+else
+  printf '\n== ShellCheck ==\nmissing; skipped\n'
+fi
+
+printf '\n== Inventory ==\n'
+"$dotfiles/scripts/.local/bin/dotfiles-inventory" | sed -n '1,80p'
+
+printf '\n== Secret Scan ==\n'
+"$dotfiles/scripts/.local/bin/dotfiles-secret-scan" "$dotfiles"
+
+printf '\nAll local checks completed.\n'

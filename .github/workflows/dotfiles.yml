@@ -1,0 +1,23 @@
+name: dotfiles
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  shell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: Bash syntax
+        run: |
+          bash -n install.sh scripts/.local/bin/* doctor.sh polybar/.config/polybar/launch.sh rofi/.config/rofi/power-menu.sh
+      - name: ShellCheck
+        run: |
+          shellcheck install.sh scripts/.local/bin/* doctor.sh polybar/.config/polybar/launch.sh rofi/.config/rofi/power-menu.sh
+      - name: Inventory
+        run: DOTFILES_DIR="$PWD" scripts/.local/bin/dotfiles-inventory
+      - name: Secret scan
+        run: scripts/.local/bin/dotfiles-secret-scan "$PWD"

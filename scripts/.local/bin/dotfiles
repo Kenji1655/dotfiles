@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
+
+usage() {
+  cat <<'EOF'
+Usage: dotfiles <command> [args]
+
+Main entrypoint for this workstation dotfiles project.
+
+Commands:
+  install [args]       Run install.sh with optional arguments.
+  verify               Run install.sh --only verify.
+  doctor               Run dotfiles-doctor.
+  inventory            Show repository inventory.
+  check                Run local project checks.
+  backup               Run backup-real.
+  backup-health        Check backup readiness and latest snapshots.
+  browser-state        Check browser profile backup readiness.
+  status               Show git status and recent commits.
+  push                 Push local commits to the configured upstream.
+  help                 Show this help.
+EOF
+}
+
+require_repo() {
+  [[ -d "$dotfiles" ]] || {
+    printf 'Dotfiles directory not found: %s\n' "$dotfiles" >&2
+    exit 1
+  }
+}
+
+require_repo
+
+cmd="${1:-help}"
+shift || true
+
+case "$cmd" in
+  install) exec "$dotfiles/install.sh" "$@" ;;
+  verify) exec "$dotfiles/install.sh" --only verify --no-vscode-extensions "$@" ;;
+  doctor) exec dotfiles-doctor "$@" ;;
+  inventory) exec dotfiles-inventory "$@" ;;
+  check) exec dotfiles-check "$@" ;;
+  backup) exec backup-real "$@" ;;
+  backup-health) exec backup-health "$@" ;;
+  browser-state) exec browser-state "$@" ;;
+  status)
+    git -C "$dotfiles" status --short --branch
+    printf '\nRecent commits:\n'
+    git -C "$dotfiles" log --oneline -8
+    ;;
+  push) exec git -C "$dotfiles" push "$@" ;;
+  help|-h|--help) usage ;;
+  *)
+    printf 'Unknown command: %s\n\n' "$cmd" >&2
+    usage >&2
+    exit 2
+    ;;
+esac

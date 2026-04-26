@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+config_file="${BACKUP_REAL_CONFIG:-$HOME/.config/backup/backup-real.env}"
+ok=$'\033[32mOK\033[0m'
+warn=$'\033[33mWARN\033[0m'
+fail=$'\033[31mFAIL\033[0m'
+
+line() {
+  printf '%b    %-24s %s\n' "$1" "$2" "${3:-}"
+}
+
+if [[ -f "$config_file" ]]; then
+  # shellcheck disable=SC1090
+  source "$config_file"
+fi
+
+printf 'BACKUP HEALTH\n\n'
+
+if [[ -f "$config_file" ]]; then
+  line "$ok" "config" "$config_file"
+else
+  line "$warn" "config" "$config_file missing"
+fi
+
+critical_paths=(
+  "$HOME/Documents"
+  "$HOME/Projects"
+  "$HOME/.ssh"
+  "$HOME/.gnupg"
+  "$HOME/.config"
+  "$HOME/.mozilla"
+  "$HOME/.pki"
+  "$HOME/.local/share/keyrings"
+  "$HOME/.dotfiles"
+)
+
+printf '\n== Covered Paths ==\n'
+for path in "${critical_paths[@]}"; do
+  if [[ -e "$path" ]]; then
+    line "$ok" "$(basename "$path")" "$path"
+  else
+    line "$warn" "$(basename "$path")" "missing"
+  fi
+done
+
+printf '\n== Backend ==\n'
+if [[ -n "${RESTIC_REPOSITORY:-}" ]]; then
+  if command -v restic >/dev/null 2>&1; then
+    line "$ok" "restic" "$RESTIC_REPOSITORY"
+    if restic snapshots --latest 1 >/dev/null 2>&1; then
+      restic snapshots --latest 1
+    else
+      line "$warn" "restic snapshots" "not initialized or inaccessible"
+    fi
+  else
+    line "$fail" "restic" "command missing"
+  fi
+elif [[ -n "${BORG_REPO:-}" ]]; then
+  if command -v borg >/dev/null 2>&1; then
+    line "$ok" "borg" "$BORG_REPO"
+    if borg list --last 1 "$BORG_REPO" >/dev/null 2>&1; then
+      borg list --last 1 "$BORG_REPO"
+    else
+      line "$warn" "borg archives" "not initialized or inaccessible"
+    fi
+  else
+    line "$fail" "borg" "command missing"
+  fi
+else
+  line "$warn" "backup target" "RESTIC_REPOSITORY or BORG_REPO not set"
+fi

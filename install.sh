@@ -2,7 +2,8 @@
 set -euo pipefail
 
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
-LOG_FILE="$DOTFILES_DIR/install.log"
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles"
+LOG_FILE="${DOTFILES_LOG_FILE:-$STATE_DIR/install-$(date +%Y%m%d-%H%M%S).log}"
 DOTFILES_PROFILE="${DOTFILES_PROFILE:-thinkpad-e14-amd}"
 
 DOTFILES_PROFILE_NAME="portable"
@@ -136,8 +137,9 @@ while (($#)); do
   shift
 done
 
-mkdir -p "$DOTFILES_DIR/backup" "$HOME/.cache/zsh" "$HOME/Pictures/Screenshots" "$HOME/.local/bin"
+mkdir -p "$DOTFILES_DIR/backup" "$STATE_DIR" "$HOME/.cache/zsh" "$HOME/Pictures/Screenshots" "$HOME/.local/bin"
 exec > >(tee -a "$LOG_FILE") 2>&1
+printf 'Log file: %s\n' "$LOG_FILE"
 
 load_profile() {
   local profile_file="$DOTFILES_DIR/profiles/$DOTFILES_PROFILE.conf"
