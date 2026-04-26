@@ -213,6 +213,7 @@ xorg-xinit
 xorg-xinput
 xorg-xrandr
 xorg-xrdb
+xorg-xset
 xsettingsd
 xss-lock
 xterm

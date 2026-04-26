@@ -37,6 +37,7 @@ xorg-xinit
 xorg-xrdb
 xorg-xrandr
 xorg-xinput
+xorg-xset
 xclip
 xterm
 ly

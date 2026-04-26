@@ -3,6 +3,7 @@
 set $mod Mod4
 set $term alacritty
 set $launcher env PATH=/home/kenji/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin QT_STYLE_OVERRIDE=kvantum rofi -show drun
+set $locker /home/kenji/.local/bin/i3lock-blur
 
 # Window style.
 font pango:JetBrainsMono Nerd Font 10
@@ -81,7 +82,7 @@ bindsym $mod+Control+space floating toggle
 bindsym $mod+Shift+minus move scratchpad
 bindsym $mod+minus scratchpad show
 bindsym $mod+p move workspace to output right
-bindsym $mod+Escape exec --no-startup-id ~/.local/bin/i3lock-blur
+bindsym $mod+Escape exec --no-startup-id $locker
 
 # Workspace switching.
 bindsym $mod+1 workspace $ws1
@@ -163,5 +164,5 @@ exec_always --no-startup-id sh -c "pgrep -f /usr/lib/polkit-gnome/polkit-gnome-a
 exec_always --no-startup-id sh -c "[ -x ~/.fehbg ] && ~/.fehbg || feh --bg-fill ~/.config/wallpaper/wall.png"
 exec_always --no-startup-id sh -c "pgrep -x autotiling-rs >/dev/null || autotiling-rs"
 exec --no-startup-id xinput disable "SYNA8020:00 06CB:CE5C Touchpad"
-exec --no-startup-id xss-lock --transfer-sleep-lock -- ~/.local/bin/i3lock-blur
-exec --no-startup-id xidlehook --not-when-fullscreen --not-when-audio --timer 300 '~/.local/bin/i3lock-blur' '' --timer 600 'xset dpms force off' ''
+exec --no-startup-id sh -c "pgrep -x xss-lock >/dev/null || xss-lock --transfer-sleep-lock -- $locker"
+exec --no-startup-id ~/.local/bin/idle-lock-daemon

@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+locker="${HOME}/.local/bin/i3lock-blur"
+
+if pgrep -x xidlehook >/dev/null 2>&1; then
+  exit 0
+fi
+
+exec xidlehook \
+  --not-when-fullscreen \
+  --not-when-audio \
+  --timer 300 "$locker" '' \
+  --timer 600 'xset dpms force off' ''

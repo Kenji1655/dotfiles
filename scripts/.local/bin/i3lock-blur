@@ -1,9 +1,39 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Capture, blur, lock, then clean up the temporary image.
-img="${XDG_RUNTIME_DIR:-/tmp}/i3lock-blur-${USER}.png"
-scrot "$img"
-convert "$img" -blur 0x8 "$img"
-i3lock --nofork -i "$img" -c 1d2021
-rm -f "$img"
+runtime_dir="${XDG_RUNTIME_DIR:-/tmp}"
+lock_file="$runtime_dir/i3lock-blur-${USER}.lock"
+img="$runtime_dir/i3lock-blur-${USER}.png"
+
+log() {
+  logger -t i3lock-blur -- "$*"
+}
+
+cleanup() {
+  rm -f "$img"
+}
+
+exec 9>"$lock_file"
+if ! flock -n 9; then
+  log "lock already running; ignoring duplicate request"
+  exit 0
+fi
+
+trap cleanup EXIT INT TERM
+
+# i3lock reads the active X11 keymap. Force the expected layout before locking
+# to avoid lockouts caused by stale layout state after monitor/session changes.
+if command -v setxkbmap >/dev/null 2>&1; then
+  setxkbmap -layout us -option terminate:ctrl_alt_bksp || log "failed to reset X keymap"
+fi
+
+if command -v scrot >/dev/null 2>&1 && command -v convert >/dev/null 2>&1; then
+  if scrot "$img" && convert "$img" -blur 0x8 "$img"; then
+    log "starting i3lock with blurred screenshot"
+    exec i3lock --nofork --ignore-empty-password --show-failed-attempts -i "$img" -c 1d2021
+  fi
+  log "screenshot/blur failed; falling back to solid color"
+fi
+
+log "starting i3lock with solid color fallback"
+exec i3lock --nofork --ignore-empty-password --show-failed-attempts -c 1d2021
