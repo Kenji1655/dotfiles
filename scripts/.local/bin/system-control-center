@@ -162,6 +162,7 @@ maintenance_menu() {
     "Remove Debug Orphans" \
     "Create Snapshot" \
     "Backup Dotfiles" \
+    "Browser State" \
     "Real Backup")" in
     "System Maintenance") run_terminal "SYSTEM MAINTENANCE" 'system-maintenance all' ;;
     "Clean User Cache") run_terminal "CLEAN USER CACHE" 'system-maintenance user-cache' ;;
@@ -170,6 +171,7 @@ maintenance_menu() {
     "Remove Debug Orphans") run_terminal "DEBUG ORPHANS" 'system-maintenance debug-orphans' ;;
     "Create Snapshot") run_terminal "SNAPSHOT" 'snapshot-manager "manual control center snapshot"' ;;
     "Backup Dotfiles") run_terminal "BACKUP DOTFILES" 'backup-dotfiles' ;;
+    "Browser State") run_terminal "BROWSER STATE" 'browser-state' ;;
     "Real Backup") run_terminal "REAL BACKUP" 'backup-real' ;;
   esac
 }

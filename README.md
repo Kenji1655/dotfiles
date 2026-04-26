@@ -166,6 +166,7 @@ because they require root ownership and should be gated by the active profile.
 | --- | --- |
 | `backup-dotfiles` | Update package lists and commit a snapshot |
 | `backup-real` | Run Restic or Borg backup after configuring a repository |
+| `browser-state` | Show browser profiles, critical state files and backup readiness |
 | `snapshot-manager` | Create Timeshift or Snapper checkpoints |
 | `security-check` | Firewall, SSH, listening ports, audit tools |
 | `security-baseline` | Apply a conservative UFW firewall baseline |
@@ -316,7 +317,19 @@ snapshot-manager "before kernel/displaylink update"
 **Personal data backup** — configure Restic or Borg first, then:
 
 ```bash
+install -Dm600 ~/.dotfiles/backup/backup-real.env.example ~/.config/backup/backup-real.env
+nvim ~/.config/backup/backup-real.env
 backup-real
+```
+
+`backup-real` includes browser profile state that must not be committed to git:
+Firefox, Zen, Chromium-compatible profiles, browser password databases, session
+state and desktop keyrings. It excludes browser caches and crash/cache folders.
+
+**Browser state check**
+
+```bash
+browser-state
 ```
 
 Recovery steps live in [`RECOVERY.md`](RECOVERY.md).
@@ -401,6 +414,7 @@ git push -u origin main
 ## Notes
 
 - **Firefox and Zen** profiles must exist before browser preferences apply. Open each browser once, then rerun `./install.sh`.
+- **Browser profile data** is intentionally not stored in git. Use `backup-real` with Restic or Borg to preserve extensions, bookmarks, sessions, cookies and saved browser state.
 - **DisplayLink** is intentionally conservative: automatic autorandr hotplug is disabled, dock profiles use 60 Hz, and monitor layouts should be applied manually after the dock settles.
 - **Docker and Podman** are both installed. Docker is for compatibility with mainstream dev tooling; Podman is preferred for rootless local database containers through `dev-db`.
 - **Installer phases** are listed with `./install.sh --list-phases`.

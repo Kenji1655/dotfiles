@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ok=$'\033[32mOK\033[0m'
+warn=$'\033[33mWARN\033[0m'
+
+line() {
+  printf '%b    %-24s %s\n' "$1" "$2" "${3:-}"
+}
+
+check_file() {
+  local label="$1"
+  local path="$2"
+
+  if [[ -s "$path" ]]; then
+    line "$ok" "$label" "$path"
+  else
+    line "$warn" "$label" "missing"
+  fi
+}
+
+check_path() {
+  local label="$1"
+  local path="$2"
+
+  if [[ -e "$path" ]]; then
+    line "$ok" "$label" "$path"
+  else
+    line "$warn" "$label" "missing"
+  fi
+}
+
+check_firefox_like_root() {
+  local name="$1"
+  local root="$2"
+
+  [[ -f "$root/profiles.ini" ]] || return 0
+
+  printf '\n== %s ==\n' "$name"
+  line "$ok" "profiles.ini" "$root/profiles.ini"
+
+  local profile
+  while IFS= read -r profile; do
+    [[ -d "$profile" ]] || continue
+    printf '\nProfile: %s\n' "$profile"
+    check_file "preferences" "$profile/prefs.js"
+    check_file "extensions" "$profile/extensions.json"
+    check_file "bookmarks DB" "$profile/places.sqlite"
+    check_file "password DB" "$profile/logins.json"
+    check_file "encryption key DB" "$profile/key4.db"
+    check_file "sessions" "$profile/sessionstore-backups/recovery.jsonlz4"
+  done < <(
+    awk -F= -v root="$root" '
+      $1 == "Path" {
+        if ($2 ~ /^\//) print $2;
+        else print root "/" $2;
+      }
+    ' "$root/profiles.ini"
+  )
+}
+
+check_chromium_root() {
+  local name="$1"
+  local root="$2"
+
+  [[ -d "$root" ]] || return 0
+
+  printf '\n== %s ==\n' "$name"
+  local profile
+  for profile in "$root"/Default "$root"/Profile\ *; do
+    [[ -d "$profile" ]] || continue
+    printf '\nProfile: %s\n' "$profile"
+    check_file "preferences" "$profile/Preferences"
+    check_file "bookmarks" "$profile/Bookmarks"
+    check_file "login data" "$profile/Login Data"
+    check_file "history" "$profile/History"
+    check_path "extensions" "$profile/Extensions"
+  done
+}
+
+printf 'BROWSER STATE\n'
+printf 'Sensitive browser data must be backed up with backup-real, not git.\n'
+
+check_firefox_like_root "Firefox" "$HOME/.mozilla/firefox"
+check_firefox_like_root "Zen" "$HOME/.config/zen"
+
+check_chromium_root "Chromium" "$HOME/.config/chromium"
+check_chromium_root "Google Chrome" "$HOME/.config/google-chrome"
+check_chromium_root "Brave" "$HOME/.config/BraveSoftware/Brave-Browser"
+
+printf '\n== Backup Readiness ==\n'
+if [[ -n "${RESTIC_REPOSITORY:-}" || -n "${BORG_REPO:-}" ]]; then
+  line "$ok" "backup target" "configured in environment"
+else
+  line "$warn" "backup target" "RESTIC_REPOSITORY or BORG_REPO not set"
+fi
+
+for path in "$HOME/.mozilla" "$HOME/.config/zen" "$HOME/.local/share/keyrings"; do
+  if [[ -e "$path" ]]; then
+    line "$ok" "included path" "$path"
+  else
+    line "$warn" "included path" "$path missing"
+  fi
+done

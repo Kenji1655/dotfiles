@@ -106,6 +106,42 @@ restic init
 backup-real
 ```
 
+For daily use, keep the backup environment in:
+
+```text
+~/.config/backup/backup-real.env
+```
+
+## Recover Browser Profiles
+
+Browser profiles contain cookies, sessions, extension state, saved logins and
+encryption keys. They must be restored from a private encrypted backup, not from
+the dotfiles repository.
+
+After a fresh install:
+
+```bash
+cd ~/.dotfiles
+./install.sh
+browser-state
+```
+
+Restore these paths from Restic or Borg before opening the browsers if you want
+the exact previous state:
+
+```text
+~/.mozilla
+~/.config/zen
+~/.config/chromium
+~/.config/google-chrome
+~/.config/BraveSoftware
+~/.local/share/keyrings
+~/.pki
+```
+
+Then log out and back in so the desktop keyring and browser processes start
+cleanly.
+
 ## Emergency Package List
 
 ```bash

@@ -10,5 +10,6 @@
 - Made hardware-specific installer steps conditional on profile flags.
 - Extended `dotfiles-doctor` with profile and lock/idle checks.
 - Documented portable versus machine-specific configuration.
+- Added browser profile backup coverage to `backup-real` and a `browser-state` audit command.
 - Disabled automatic autorandr hotplug for DisplayLink/EVDI stability.
 - Standardized the DisplayLink dock profile to 60 Hz.

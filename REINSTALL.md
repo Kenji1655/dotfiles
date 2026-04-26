@@ -55,11 +55,16 @@ sudo reboot
 - Enables the user `xsettingsd` service for GTK theme propagation.
 - Applies Firefox/Zen `user.js` preferences to detected profiles.
 - Applies Gruvbox/dark theme preferences for GTK, Qt and browsers.
+- Restores portable browser preferences from git; complete browser state must
+  come from `backup-real` because it contains secrets and sessions.
 
 ## Important Notes
 
 - DisplayLink usually needs a reboot after install because of DKMS/EVDI.
 - Firefox and Zen need to be opened once before browser profiles exist. Run `./install.sh` again after first opening them if the `user.js` preferences were not applied.
+- To preserve browser extensions, bookmarks, sessions, cookies and saved state,
+  restore `backup-real` data before first browser use and verify with
+  `browser-state`.
 - Wallpapers live in `~/.config/wallpaper` and are managed by `Super + Shift + W`.
 - Run `backup-dotfiles` before big changes to create a local git snapshot and update package lists.
 - Run `dotfiles-secret-scan` before pushing to GitHub.

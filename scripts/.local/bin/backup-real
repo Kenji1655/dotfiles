@@ -1,18 +1,48 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+config_file="${BACKUP_REAL_CONFIG:-$HOME/.config/backup/backup-real.env}"
+
+if [[ -f "$config_file" ]]; then
+  # shellcheck disable=SC1090
+  source "$config_file"
+fi
+
 paths=(
   "$HOME/Documents"
   "$HOME/Projects"
   "$HOME/.ssh"
   "$HOME/.gnupg"
   "$HOME/.config"
+  "$HOME/.mozilla"
+  "$HOME/.pki"
+  "$HOME/.local/share/keyrings"
   "$HOME/.dotfiles"
+)
+
+excludes=(
+  "$HOME/.cache"
+  "$HOME/.config/*/Cache"
+  "$HOME/.config/*/Code Cache"
+  "$HOME/.config/*/GPUCache"
+  "$HOME/.config/*/Crash Reports"
+  "$HOME/.config/*/*/Cache"
+  "$HOME/.config/*/*/Code Cache"
+  "$HOME/.config/*/*/GPUCache"
+  "$HOME/.config/zen/*/cache2"
+  "$HOME/.config/zen/*/startupCache"
+  "$HOME/.mozilla/firefox/*/cache2"
+  "$HOME/.mozilla/firefox/*/startupCache"
 )
 
 existing=()
 for path in "${paths[@]}"; do
   [[ -e "$path" ]] && existing+=("$path")
+done
+
+exclude_args=()
+for path in "${excludes[@]}"; do
+  exclude_args+=(--exclude "$path")
 done
 
 if command -v restic >/dev/null 2>&1; then
@@ -21,7 +51,7 @@ if command -v restic >/dev/null 2>&1; then
     printf 'Example: export RESTIC_REPOSITORY=/run/media/kenji/Backup/restic\n' >&2
     exit 2
   fi
-  exec restic backup "${existing[@]}"
+  exec restic backup "${exclude_args[@]}" "${existing[@]}"
 fi
 
 if command -v borg >/dev/null 2>&1; then
@@ -30,7 +60,7 @@ if command -v borg >/dev/null 2>&1; then
     printf 'Example: export BORG_REPO=/run/media/kenji/Backup/borg::thinkpad-{now}\n' >&2
     exit 2
   fi
-  exec borg create --stats "$BORG_REPO" "${existing[@]}"
+  exec borg create --stats "${exclude_args[@]}" "$BORG_REPO" "${existing[@]}"
 fi
 
 printf 'No backup tool found. Install restic or borg.\n' >&2
