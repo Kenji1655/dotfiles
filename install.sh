@@ -168,6 +168,7 @@ run() {
 
 read_list() {
   local file="$1"
+  [[ -f "$file" ]] || { printf 'Required list file not found: %s\n' "$file" >&2; exit 1; }
   awk '
     /^[[:space:]]*#/ { next }
     /^[[:space:]]*$/ { next }
@@ -185,6 +186,17 @@ read_stow_modules() {
       ranger yazi gtk qt profile xresources xsettingsd scripts browser systemd \
       autorandr wallpaper wireplumber portal
   fi
+}
+
+validate_stow_modules() {
+  local module missing=0
+  while IFS= read -r module; do
+    [[ -d "$DOTFILES_DIR/$module" ]] && continue
+    printf 'Stow module listed but missing: %s\n' "$module" >&2
+    missing=1
+  done < <(read_stow_modules)
+
+  ((missing == 0)) || exit 1
 }
 
 require_arch() {
@@ -335,6 +347,7 @@ ensure_materialized_dir() {
 stow_home() {
   local backup_root
   backup_root="$DOTFILES_DIR/backup/$(date +%Y%m%d-%H%M%S)"
+  validate_stow_modules
   ensure_materialized_dir "$HOME/.config/systemd"
   ensure_materialized_dir "$HOME/.config/systemd/user"
   ensure_materialized_dir "$HOME/.config/systemd/user/default.target.wants"

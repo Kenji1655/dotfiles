@@ -154,6 +154,7 @@ because they require root ownership and should be gated by the active profile.
 | `system-control-center` | Categorized Rofi control panel |
 | `system-health` | Health check alias for `dotfiles-doctor` |
 | `dotfiles-doctor` | Commands, symlinks, services, display, power, GRUB and git state |
+| `dotfiles-inventory` | Read-only inventory of profile, package lists, Stow modules and local commands |
 | `boot-analysis` | Boot time, slow units and critical chain |
 | `dock-health` | DisplayLink, EVDI, monitors, autorandr and Polybar |
 | `performance-health` | CPU, TLP, zram, swap, storage, boot, heavy processes and containers |
@@ -304,6 +305,12 @@ The Arch installer enables:
 
 ```bash
 system-maintenance all
+```
+
+**Inventory before reinstall or larger refactors**
+
+```bash
+dotfiles-inventory
 ```
 
 Also exposed in the control center as `System Maintenance`.

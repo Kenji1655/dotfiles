@@ -115,7 +115,7 @@ if [[ -n "$profile_description" ]]; then
 fi
 
 printf "== Commands ==\n"
-for cmd in i3 polybar rofi picom dunst alacritty tmux nvim yazi feh flameshot autorandr xrandr xinput xset pactl sensors dock-health security-check performance-health system-mode dev-stack-manager dev-db backup-real browser-state snapshot-manager i3lock-blur idle-lock-daemon; do
+for cmd in i3 polybar rofi picom dunst alacritty tmux nvim yazi feh flameshot autorandr xrandr xinput xset pactl sensors dock-health security-check performance-health system-mode dev-stack-manager dev-db backup-real browser-state dotfiles-inventory snapshot-manager i3lock-blur idle-lock-daemon; do
   check_command "$cmd"
 done
 

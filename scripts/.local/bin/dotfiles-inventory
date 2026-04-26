@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
+profile="${DOTFILES_PROFILE:-thinkpad-e14-amd}"
+
+count_list() {
+  local file="$1"
+  if [[ ! -f "$file" ]]; then
+    printf 'missing'
+    return 0
+  fi
+
+  awk '
+    /^[[:space:]]*#/ { next }
+    /^[[:space:]]*$/ { next }
+    { count++ }
+    END { print count + 0 }
+  ' "$file"
+}
+
+print_list() {
+  local file="$1"
+  [[ -f "$file" ]] || return 0
+  awk '
+    /^[[:space:]]*#/ { next }
+    /^[[:space:]]*$/ { next }
+    { print "  - " $1 }
+  ' "$file"
+}
+
+printf 'DOTFILES INVENTORY\n'
+printf 'Repo: %s\n' "$dotfiles"
+printf 'Profile: %s\n' "$profile"
+
+if [[ -f "$dotfiles/profiles/$profile.conf" ]]; then
+  printf 'Profile file: profiles/%s.conf\n' "$profile"
+else
+  printf 'Profile file: missing, installer will use portable defaults\n'
+fi
+
+printf '\n== Declarative Lists ==\n'
+printf 'Arch packages: %s\n' "$(count_list "$dotfiles/packages/arch.txt")"
+printf 'AUR packages: %s\n' "$(count_list "$dotfiles/packages/aur.txt")"
+printf 'Stow modules: %s\n' "$(count_list "$dotfiles/packages/stow.txt")"
+printf 'VS Code extensions: %s\n' "$(count_list "$dotfiles/vscode/extensions.txt")"
+
+printf '\n== Stow Modules ==\n'
+print_list "$dotfiles/packages/stow.txt"
+
+printf '\n== Installer Phases ==\n'
+if [[ -x "$dotfiles/install.sh" ]]; then
+  "$dotfiles/install.sh" --list-phases | sed 's/^/  - /'
+else
+  printf '  - install.sh missing or not executable\n'
+fi
+
+printf '\n== Local Commands ==\n'
+find "$dotfiles/scripts/.local/bin" -maxdepth 1 -type f -printf '  - %f\n' 2>/dev/null | sort
+
+printf '\n== Git ==\n'
+if [[ -d "$dotfiles/.git" ]]; then
+  git -C "$dotfiles" status --short --branch
+else
+  printf 'not a git repository\n'
+fi
