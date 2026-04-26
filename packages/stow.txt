@@ -1,0 +1,27 @@
+# Home-level stow modules. Keep system-level configs in install.sh/profile logic.
+i3
+polybar
+rofi
+picom
+dunst
+alacritty
+tmux
+zsh
+git
+nvim
+btop
+fastfetch
+ranger
+yazi
+gtk
+qt
+profile
+xresources
+xsettingsd
+scripts
+browser
+systemd
+autorandr
+wallpaper
+wireplumber
+portal

@@ -3,6 +3,22 @@ set -euo pipefail
 
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
 LOG_FILE="$DOTFILES_DIR/install.log"
+DOTFILES_PROFILE="${DOTFILES_PROFILE:-thinkpad-e14-amd}"
+
+DOTFILES_PROFILE_NAME="portable"
+DOTFILES_PROFILE_DESCRIPTION="Portable dotfiles defaults"
+ENABLE_THINKPAD_STACK=0
+ENABLE_DISPLAYLINK=0
+ENABLE_GRUB_THEME=0
+ENABLE_BLUETOOTH=1
+ENABLE_DOCKER=1
+ENABLE_UFW=1
+ENABLE_ZRAM=1
+ENABLE_SYSTEMD_HOMED=0
+DISABLE_POWER_PROFILES_DAEMON=0
+LY_TTY="tty2"
+GRUB_THEME_NAME="lenovo-thinkpad-efi"
+GRUB_KERNEL_FLAGS=""
 
 DRY_RUN=0
 UPGRADE_SYSTEM=1
@@ -43,6 +59,7 @@ Options:
   --no-services               Install packages/configs, but do not initialize dev services.
   --no-vscode-extensions      Skip VS Code extension installation.
   --list-phases               Print available phases.
+  DOTFILES_PROFILE=<name>     Select a profile from profiles/<name>.conf.
   -h, --help                  Show this help.
 
 Phases:
@@ -122,6 +139,23 @@ done
 mkdir -p "$DOTFILES_DIR/backup" "$HOME/.cache/zsh" "$HOME/Pictures/Screenshots" "$HOME/.local/bin"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
+load_profile() {
+  local profile_file="$DOTFILES_DIR/profiles/$DOTFILES_PROFILE.conf"
+  local local_profile_file="$DOTFILES_DIR/profiles/$DOTFILES_PROFILE.local.conf"
+
+  if [[ -f "$profile_file" ]]; then
+    # shellcheck disable=SC1090
+    source "$profile_file"
+  else
+    printf 'Profile %s not found at %s; using portable defaults.\n' "$DOTFILES_PROFILE" "$profile_file"
+  fi
+
+  if [[ -f "$local_profile_file" ]]; then
+    # shellcheck disable=SC1090
+    source "$local_profile_file"
+  fi
+}
+
 run() {
   if [[ "$DRY_RUN" == 1 ]]; then
     printf '[dry-run]'
@@ -139,6 +173,18 @@ read_list() {
     /^[[:space:]]*$/ { next }
     { print $1 }
   ' "$file"
+}
+
+read_stow_modules() {
+  local file="$DOTFILES_DIR/packages/stow.txt"
+  if [[ -f "$file" ]]; then
+    read_list "$file"
+  else
+    printf '%s\n' \
+      i3 polybar rofi picom dunst alacritty tmux zsh git nvim btop fastfetch \
+      ranger yazi gtk qt profile xresources xsettingsd scripts browser systemd \
+      autorandr wallpaper wireplumber portal
+  fi
 }
 
 require_arch() {
@@ -295,11 +341,8 @@ stow_home() {
   ensure_materialized_dir "$HOME/.config/systemd/user/timers.target.wants"
   ensure_materialized_dir "$HOME/.local/share/applications"
 
-  local packages=(
-    i3 polybar rofi picom dunst alacritty tmux zsh git nvim btop fastfetch
-    ranger yazi gtk qt profile xresources xsettingsd scripts browser systemd
-    autorandr wallpaper wireplumber portal
-  )
+  local packages=()
+  mapfile -t packages < <(read_stow_modules)
 
   for pkg in "${packages[@]}"; do
     backup_package_targets "$pkg" "$HOME" "$backup_root"
@@ -312,16 +355,30 @@ install_system_configs() {
   backup_root="$DOTFILES_DIR/backup/system-$(date +%Y%m%d-%H%M%S)"
   local pairs=(
     "$DOTFILES_DIR/ly/etc/ly/config.ini:/etc/ly/config.ini"
-    "$DOTFILES_DIR/tlp/etc/tlp.d/01-thinkpad-e14-amd.conf:/etc/tlp.d/01-thinkpad-e14-amd.conf"
-    "$DOTFILES_DIR/thinkfan/etc/thinkfan.yaml:/etc/thinkfan.yaml"
-    "$DOTFILES_DIR/thinkfan/etc/modprobe.d/99-thinkfan.conf:/etc/modprobe.d/99-thinkfan.conf"
-    "$DOTFILES_DIR/lm_sensors/etc/conf.d/lm_sensors:/etc/conf.d/lm_sensors"
-    "$DOTFILES_DIR/lm_sensors/etc/sensors.d/thinkpad-e14-ddr5.conf:/etc/sensors.d/thinkpad-e14-ddr5.conf"
-    "$DOTFILES_DIR/lm_sensors/etc/sensors.d/thinkpad-isa.conf:/etc/sensors.d/thinkpad-isa.conf"
-    "$DOTFILES_DIR/bluetooth/etc/bluetooth/main.conf:/etc/bluetooth/main.conf"
-    "$DOTFILES_DIR/zram/etc/systemd/zram-generator.conf:/etc/systemd/zram-generator.conf"
-    "$DOTFILES_DIR/displaylink/etc/udev/rules.d/40-monitor-hotplug.rules:/etc/udev/rules.d/40-monitor-hotplug.rules"
   )
+
+  if [[ "$ENABLE_THINKPAD_STACK" == 1 ]]; then
+    pairs+=(
+      "$DOTFILES_DIR/tlp/etc/tlp.d/01-thinkpad-e14-amd.conf:/etc/tlp.d/01-thinkpad-e14-amd.conf"
+      "$DOTFILES_DIR/thinkfan/etc/thinkfan.yaml:/etc/thinkfan.yaml"
+      "$DOTFILES_DIR/thinkfan/etc/modprobe.d/99-thinkfan.conf:/etc/modprobe.d/99-thinkfan.conf"
+      "$DOTFILES_DIR/lm_sensors/etc/conf.d/lm_sensors:/etc/conf.d/lm_sensors"
+      "$DOTFILES_DIR/lm_sensors/etc/sensors.d/thinkpad-e14-ddr5.conf:/etc/sensors.d/thinkpad-e14-ddr5.conf"
+      "$DOTFILES_DIR/lm_sensors/etc/sensors.d/thinkpad-isa.conf:/etc/sensors.d/thinkpad-isa.conf"
+    )
+  fi
+
+  if [[ "$ENABLE_BLUETOOTH" == 1 ]]; then
+    pairs+=("$DOTFILES_DIR/bluetooth/etc/bluetooth/main.conf:/etc/bluetooth/main.conf")
+  fi
+
+  if [[ "$ENABLE_ZRAM" == 1 ]]; then
+    pairs+=("$DOTFILES_DIR/zram/etc/systemd/zram-generator.conf:/etc/systemd/zram-generator.conf")
+  fi
+
+  if [[ "$ENABLE_DISPLAYLINK" == 1 ]]; then
+    pairs+=("$DOTFILES_DIR/displaylink/etc/udev/rules.d/40-monitor-hotplug.rules:/etc/udev/rules.d/40-monitor-hotplug.rules")
+  fi
 
   for pair in "${pairs[@]}"; do
     local src="${pair%%:*}"
@@ -339,11 +396,13 @@ install_system_configs() {
 }
 
 install_grub_theme() {
-  local theme_name="lenovo-thinkpad-efi"
+  [[ "$ENABLE_GRUB_THEME" == 1 ]] || return 0
+
+  local theme_name="$GRUB_THEME_NAME"
   local theme_src="$DOTFILES_DIR/grub/usr/share/grub/themes/$theme_name"
   local theme_dst="/usr/share/grub/themes/$theme_name"
   local theme_line="GRUB_THEME=\"$theme_dst/theme.txt\""
-  local fan_flag="thinkpad_acpi.fan_control=1"
+  local kernel_flags="$GRUB_KERNEL_FLAGS"
 
   [[ -d "$theme_src" ]] || return 0
 
@@ -357,12 +416,14 @@ install_grub_theme() {
       run sudo sh -c "printf '\\n%s\\n' '$theme_line' >> /etc/default/grub"
     fi
 
-    if grep -q '^GRUB_CMDLINE_LINUX=' /etc/default/grub; then
-      if ! grep -q "$fan_flag" /etc/default/grub; then
-        run sudo sed -i "/^GRUB_CMDLINE_LINUX=/ s|\"$| $fan_flag\"|" /etc/default/grub
+    if [[ -n "$kernel_flags" ]]; then
+      if grep -q '^GRUB_CMDLINE_LINUX=' /etc/default/grub; then
+        if ! grep -q "$kernel_flags" /etc/default/grub; then
+          run sudo sed -i "/^GRUB_CMDLINE_LINUX=/ s|\"$| $kernel_flags\"|" /etc/default/grub
+        fi
+      else
+        run sudo sh -c "printf 'GRUB_CMDLINE_LINUX=\"%s\"\\n' '$kernel_flags' >> /etc/default/grub"
       fi
-    else
-      run sudo sh -c "printf 'GRUB_CMDLINE_LINUX=\"%s\"\\n' '$fan_flag' >> /etc/default/grub"
     fi
   fi
 
@@ -374,21 +435,35 @@ install_grub_theme() {
 enable_services() {
   run sudo systemctl enable NetworkManager.service
   run sudo systemctl disable NetworkManager-wait-online.service || true
-  run sudo systemctl disable --now power-profiles-daemon.service || true
-  run sudo systemctl mask power-profiles-daemon.service || true
-  run sudo systemctl enable bluetooth.service
+  if [[ "$DISABLE_POWER_PROFILES_DAEMON" == 1 ]]; then
+    run sudo systemctl disable --now power-profiles-daemon.service || true
+    run sudo systemctl mask power-profiles-daemon.service || true
+  fi
+  if [[ "$ENABLE_BLUETOOTH" == 1 ]]; then
+    run sudo systemctl enable bluetooth.service
+  fi
   run sudo systemctl enable systemd-resolved.service
-  run sudo systemctl enable systemd-homed.service
-  run sudo systemctl enable tlp.service
-  run sudo systemctl enable ufw.service
-  run sudo ufw --force enable
-  run sudo ufw logging off
+  if [[ "$ENABLE_SYSTEMD_HOMED" == 1 ]]; then
+    run sudo systemctl enable systemd-homed.service
+  fi
+  if [[ "$ENABLE_THINKPAD_STACK" == 1 ]]; then
+    run sudo systemctl enable tlp.service
+  fi
+  if [[ "$ENABLE_UFW" == 1 ]]; then
+    run sudo systemctl enable ufw.service
+    run sudo ufw --force enable
+    run sudo ufw logging off
+  fi
   run sudo systemctl enable fstrim.timer
-  run sudo systemctl enable lm_sensors.service
-  run sudo systemctl enable thinkfan.service thinkfan-sleep.service thinkfan-wakeup.service
-  run sudo usermod -aG docker "$USER"
-  run sudo systemctl enable docker.service
-  if systemctl list-unit-files displaylink.service >/dev/null 2>&1; then
+  if [[ "$ENABLE_THINKPAD_STACK" == 1 ]]; then
+    run sudo systemctl enable lm_sensors.service
+    run sudo systemctl enable thinkfan.service thinkfan-sleep.service thinkfan-wakeup.service
+  fi
+  if [[ "$ENABLE_DOCKER" == 1 ]]; then
+    run sudo usermod -aG docker "$USER"
+    run sudo systemctl enable docker.service
+  fi
+  if [[ "$ENABLE_DISPLAYLINK" == 1 ]] && systemctl list-unit-files displaylink.service >/dev/null 2>&1; then
     run sudo systemctl enable displaylink.service
   fi
   for dm in gdm.service sddm.service lightdm.service; do
@@ -396,7 +471,7 @@ enable_services() {
       run sudo systemctl disable "$dm" || true
     fi
   done
-  run sudo systemctl enable ly@tty2.service
+  run sudo systemctl enable "ly@$LY_TTY.service"
 }
 
 configure_dev_services() {
@@ -532,6 +607,8 @@ EOF
 
 main() {
   require_arch
+  load_profile
+  printf 'Using profile: %s (%s)\n' "$DOTFILES_PROFILE_NAME" "$DOTFILES_PROFILE_DESCRIPTION"
   run_phase packages install_pacman_packages
   run_phase aur install_aur_packages
   run_phase shell setup_shell_tools

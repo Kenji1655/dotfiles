@@ -1,6 +1,8 @@
 # Reinstall
 
 This repository is intended for an Arch Linux install using i3, Gruvbox, Polybar, TLP, thinkfan and DisplayLink.
+Machine-specific behavior is selected through `DOTFILES_PROFILE`; the default
+profile is `thinkpad-e14-amd`.
 
 ## Fresh System
 
@@ -12,6 +14,15 @@ git clone https://github.com/YOUR_USER/YOUR_REPO.git ~/.dotfiles
 cd ~/.dotfiles
 ./install.sh
 ```
+
+To use a different machine profile:
+
+```bash
+DOTFILES_PROFILE=<profile-name> ./install.sh
+```
+
+Local profile overrides belong in `profiles/<profile-name>.local.conf`. Those
+files are ignored by git and should not contain secrets.
 
 For a safer rerun without upgrading the whole system:
 

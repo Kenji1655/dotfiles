@@ -2,6 +2,9 @@
 set -uo pipefail
 
 dotfiles="${DOTFILES_DIR:-$HOME/.dotfiles}"
+profile="${DOTFILES_PROFILE:-thinkpad-e14-amd}"
+profile_name="portable"
+profile_description="Portable dotfiles defaults"
 ok=0
 warn=0
 fail=0
@@ -78,11 +81,41 @@ check_symlink() {
   fi
 }
 
+load_profile() {
+  local profile_file="$dotfiles/profiles/$profile.conf"
+  local local_profile_file="$dotfiles/profiles/$profile.local.conf"
+
+  if [[ -f "$profile_file" ]]; then
+    # shellcheck disable=SC1090
+    source "$profile_file"
+    profile_name="${DOTFILES_PROFILE_NAME:-$profile}"
+    profile_description="${DOTFILES_PROFILE_DESCRIPTION:-}"
+  fi
+
+  if [[ -f "$local_profile_file" ]]; then
+    # shellcheck disable=SC1090
+    source "$local_profile_file"
+    profile_name="${DOTFILES_PROFILE_NAME:-$profile_name}"
+    profile_description="${DOTFILES_PROFILE_DESCRIPTION:-$profile_description}"
+  fi
+}
+
+load_profile
+
 printf "DOTFILES DOCTOR\n"
 printf "Repo: %s\n\n" "$dotfiles"
+printf "== Profile ==\n"
+if [[ -f "$dotfiles/profiles/$profile.conf" ]]; then
+  print_status ok "profile" "$profile_name"
+else
+  print_status warn "profile" "$profile not found; portable defaults"
+fi
+if [[ -n "$profile_description" ]]; then
+  print_status ok "profile details" "$profile_description"
+fi
 
 printf "== Commands ==\n"
-for cmd in i3 polybar rofi picom dunst alacritty tmux nvim yazi feh flameshot autorandr xrandr xinput pactl sensors dock-health security-check performance-health system-mode dev-stack-manager dev-db backup-real snapshot-manager; do
+for cmd in i3 polybar rofi picom dunst alacritty tmux nvim yazi feh flameshot autorandr xrandr xinput xset pactl sensors dock-health security-check performance-health system-mode dev-stack-manager dev-db backup-real snapshot-manager i3lock-blur idle-lock-daemon; do
   check_command "$cmd"
 done
 
@@ -156,7 +189,7 @@ for unit in pipewire.service pipewire-pulse.service wireplumber.service xdg-desk
 done
 
 printf "\n== Desktop Processes ==\n"
-for proc in polybar dunst picom; do
+for proc in polybar dunst picom xss-lock xidlehook; do
   if pgrep -x "$proc" >/dev/null 2>&1; then
     print_status ok "$proc" "running"
   else

@@ -4,6 +4,7 @@ __pycache__/
 install.log
 install-ubuntu.log
 *.log
+profiles/*.local.conf
 backup/[0-9]*/
 backup/system-[0-9]*/
 backup/adopt-*/

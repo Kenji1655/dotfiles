@@ -24,6 +24,7 @@ A fullstack and mobile development workstation, tuned end to end.
 - [Highlights](#highlights)
 - [Quick Install](#quick-install)
 - [Repository Layout](#repository-layout)
+- [Portability Model](#portability-model)
 - [Daily Commands](#daily-commands)
 - [Keybindings](#keybindings)
 - [Monitor Profiles](#monitor-profiles)
@@ -95,12 +96,52 @@ cd ~/.dotfiles && ./doctor.sh
   browser, portal, profile             desktop integration
   grub                                 bootloader theme
   packages, vscode                     declarative install lists
+  profiles                             machine profiles and local overrides
   scripts                              ~/.local/bin helpers
   backup, system-notes                 package lists and notes
   install.sh                           single full installer
   doctor.sh                            health check
   README, RECOVERY, REINSTALL, DEV_ENVIRONMENT
 ```
+
+---
+
+## Portability Model
+
+The repository is split into portable defaults and explicit machine profiles.
+The default profile is `thinkpad-e14-amd`, selected through:
+
+```bash
+DOTFILES_PROFILE=thinkpad-e14-amd ./install.sh
+```
+
+For a generic Arch+i3 install without ThinkPad, DisplayLink or GRUB hardware
+tuning:
+
+```bash
+DOTFILES_PROFILE=portable ./install.sh
+```
+
+Profile files live in:
+
+```text
+profiles/<name>.conf
+profiles/<name>.local.conf
+```
+
+Versioned profile files describe hardware and service policy: ThinkPad fan
+control, TLP, zram, DisplayLink, GRUB theme, Docker, UFW and the Ly TTY.
+Local overrides use `profiles/*.local.conf`, are ignored by git, and should
+contain host-only preferences only. Do not store secrets there.
+
+Home-level Stow modules are declared in:
+
+```text
+packages/stow.txt
+```
+
+System-level files are intentionally installed by `install.sh` instead of Stow
+because they require root ownership and should be gated by the active profile.
 
 ---
 
