@@ -155,7 +155,7 @@ for_window [class="YAZI"] floating enable, resize set 1200 760, move position ce
 exec_always --no-startup-id ~/.config/polybar/launch.sh
 exec_always --no-startup-id /home/kenji/.local/bin/polybar-monitor-watch
 exec_always --no-startup-id /home/kenji/.local/bin/power-state-watch
-exec_always --no-startup-id sh -c "pkill -x picom 2>/dev/null; picom -b --config ~/.config/picom/picom.conf"
+exec_always --no-startup-id /home/kenji/.local/bin/picom-control restart
 exec_always --no-startup-id sh -c "pgrep -x dunst >/dev/null || dunst"
 exec_always --no-startup-id sh -c "pgrep -x flameshot >/dev/null || flameshot"
 exec_always --no-startup-id sh -c "pgrep -x nm-applet >/dev/null || nm-applet"
