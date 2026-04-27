@@ -2,7 +2,7 @@
 
 set $mod Mod4
 set $term alacritty
-set $launcher env PATH=/home/kenji/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin QT_STYLE_OVERRIDE=kvantum rofi -show drun
+set $launcher /home/kenji/.local/bin/rofi-drun
 set $locker /home/kenji/.local/bin/i3lock-blur
 
 # Window style.

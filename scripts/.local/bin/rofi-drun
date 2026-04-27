@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export PATH="$HOME/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+export QT_STYLE_OVERRIDE="${QT_STYLE_OVERRIDE:-kvantum}"
+
+flatpak_system="/var/lib/flatpak/exports/share"
+flatpak_user="$HOME/.local/share/flatpak/exports/share"
+data_dirs=(
+  "$HOME/.local/share"
+  "$flatpak_user"
+  "$flatpak_system"
+  "/usr/local/share"
+  "/usr/share"
+)
+
+xdg_data_dirs=""
+for dir in "${data_dirs[@]}"; do
+  [[ -d "$dir" ]] || continue
+  case ":$xdg_data_dirs:" in
+    *":$dir:"*) ;;
+    *) xdg_data_dirs="${xdg_data_dirs:+$xdg_data_dirs:}$dir" ;;
+  esac
+done
+export XDG_DATA_DIRS="$xdg_data_dirs"
+
+exec rofi -show drun -drun-reload-desktop-cache true "$@"

@@ -3,7 +3,7 @@ Version=1.0
 Name=Volume Control
 GenericName=Volume Control
 Comment=Adjust the volume level
-Exec=env GTK_THEME=Adwaita:dark ADW_DEBUG_COLOR_SCHEME=prefer-dark /usr/bin/pavucontrol
+Exec=/home/kenji/.local/bin/pavucontrol
 Icon=org.pulseaudio.pavucontrol
 StartupNotify=true
 Type=Application
