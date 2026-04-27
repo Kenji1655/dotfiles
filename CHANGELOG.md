@@ -13,6 +13,8 @@
 - Added browser profile backup coverage to `backup-real` and a `browser-state` audit command.
 - Added `dotfiles-inventory` and stricter installer validation for declarative lists and Stow modules.
 - Added main `dotfiles` CLI, `backup-health`, local `dotfiles-check`, install logs in XDG state and CI checks.
+- Added `dotfiles bootstrap` and expanded local checks for i3 config, desktop files and key symlink targets.
+- Removed committed runtime installer logs from the repository.
 - Added safe `backup-real --list-paths` and `--dry-run` modes.
 - Disabled automatic autorandr hotplug for DisplayLink/EVDI stability.
 - Standardized the DisplayLink dock profile to 60 Hz.

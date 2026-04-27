@@ -11,6 +11,7 @@ Main entrypoint for this workstation dotfiles project.
 
 Commands:
   install [args]       Run install.sh with optional arguments.
+  bootstrap            Dry-run package/stow/verify phases before a rebuild.
   verify               Run install.sh --only verify.
   doctor               Run dotfiles-doctor.
   inventory            Show repository inventory.
@@ -38,6 +39,7 @@ shift || true
 
 case "$cmd" in
   install) exec "$dotfiles/install.sh" "$@" ;;
+  bootstrap) exec "$dotfiles/install.sh" --dry-run --only packages,aur,stow,verify --no-upgrade --no-vscode-extensions "$@" ;;
   verify) exec "$dotfiles/install.sh" --only verify --no-vscode-extensions "$@" ;;
   doctor) exec dotfiles-doctor "$@" ;;
   inventory) exec dotfiles-inventory "$@" ;;

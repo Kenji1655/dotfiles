@@ -66,6 +66,7 @@ After Stow is applied, the main operational command is:
 
 ```bash
 dotfiles help
+dotfiles bootstrap
 dotfiles verify
 dotfiles status
 ```
@@ -74,6 +75,7 @@ dotfiles status
 
 ```bash
 cd ~/.dotfiles && ./install.sh --dry-run
+dotfiles bootstrap
 ```
 
 **Run one phase only**
@@ -315,7 +317,8 @@ Day-to-day operation should go through the main CLI:
 ```bash
 dotfiles status       # git state and recent commits
 dotfiles inventory    # profile, package lists, stow modules and commands
-dotfiles check        # local syntax, ShellCheck, inventory and secret scan
+dotfiles check        # syntax, ShellCheck, i3, desktop files, inventory and secret scan
+dotfiles bootstrap    # dry-run package, AUR, Stow and verify phases
 dotfiles verify       # full repo/system verification phase
 dotfiles backup-health
 ```
@@ -334,6 +337,9 @@ Installer logs are written to:
 ```text
 ~/.local/state/dotfiles/install-YYYYmmdd-HHMMSS.log
 ```
+
+Runtime logs such as `install.log` are intentionally ignored and must not be
+committed to the repository.
 
 The repository intentionally avoids storing browser sessions, cookies, tokens,
 saved logins and local keyrings. Those belong in encrypted Restic/Borg backups.

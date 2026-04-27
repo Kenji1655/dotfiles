@@ -7,5 +7,5 @@ Exec=/home/kenji/.local/bin/pavucontrol
 Icon=org.pulseaudio.pavucontrol
 StartupNotify=true
 Type=Application
-Categories=AudioVideo;Audio;Mixer;GTK;Settings;X-XFCE-SettingsDialog;X-XFCE-HardwareSettings;
+Categories=AudioVideo;Audio;Mixer;GTK;
 Keywords=pavucontrol;PulseAudio;Microphone;Volume;Fade;Balance;Headset;Speakers;Headphones;Audio;Mixer;Output;Input;Devices;Playback;Recording;System Sounds;Sound Card;Settings;Preferences;

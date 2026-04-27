@@ -21,8 +21,43 @@ else
   printf '\n== ShellCheck ==\nmissing; skipped\n'
 fi
 
+printf '\n== i3 Config ==\n'
+if command -v i3 >/dev/null 2>&1; then
+  if ! i3_output="$(i3 -C -c "$dotfiles/i3/.config/i3/config" 2>&1)"; then
+    printf '%s\n' "$i3_output" >&2
+    exit 1
+  fi
+  printf 'OK\n'
+else
+  printf 'i3 missing; skipped\n'
+fi
+
+printf '\n== Desktop Files ==\n'
+if command -v desktop-file-validate >/dev/null 2>&1; then
+  find "$dotfiles" -path '*/applications/*.desktop' -type f -print0 |
+    xargs -0 -r desktop-file-validate
+  printf 'OK\n'
+else
+  printf 'desktop-file-validate missing; skipped\n'
+fi
+
+printf '\n== Symlink Targets ==\n'
+for path in \
+  "$HOME/.config/i3/config" \
+  "$HOME/.local/bin/dotfiles" \
+  "$HOME/.local/bin/rofi-drun" \
+  "$HOME/.local/bin/pavucontrol"; do
+  if [[ -L "$path" && -e "$path" ]]; then
+    printf 'OK %s -> %s\n' "$path" "$(readlink "$path")"
+  elif [[ -e "$path" ]]; then
+    printf 'WARN %s exists but is not a symlink\n' "$path"
+  else
+    printf 'WARN %s missing\n' "$path"
+  fi
+done
+
 printf '\n== Inventory ==\n'
-"$dotfiles/scripts/.local/bin/dotfiles-inventory" | sed -n '1,80p'
+"$dotfiles/scripts/.local/bin/dotfiles-inventory"
 
 printf '\n== Secret Scan ==\n'
 "$dotfiles/scripts/.local/bin/dotfiles-secret-scan" "$dotfiles"
