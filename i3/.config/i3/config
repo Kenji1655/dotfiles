@@ -8,6 +8,8 @@ set $locker /home/kenji/.local/bin/i3lock-blur
 # Window style.
 font pango:JetBrainsMono Nerd Font 10
 floating_modifier $mod
+floating_minimum_size 80 x 60
+floating_maximum_size -1 x -1
 default_border pixel 3
 default_floating_border pixel 3
 hide_edge_borders none
@@ -79,6 +81,8 @@ bindsym $mod+w layout tabbed
 bindsym $mod+e layout toggle split
 bindsym $mod+space focus mode_toggle
 bindsym $mod+Control+space floating toggle
+bindsym $mod+Control+f floating toggle, resize set 70 ppt 75 ppt, move position center
+bindsym $mod+Shift+c move position center
 bindsym $mod+Shift+minus move scratchpad
 bindsym $mod+minus scratchpad show
 bindsym $mod+p move workspace to output right
@@ -108,19 +112,76 @@ bindsym $mod+Shift+0 move container to workspace $ws10
 
 # Resize mode.
 mode "resize" {
-    bindsym h resize shrink width 10 px or 10 ppt
-    bindsym j resize grow height 10 px or 10 ppt
-    bindsym k resize shrink height 10 px or 10 ppt
-    bindsym l resize grow width 10 px or 10 ppt
-    bindsym Left resize shrink width 10 px or 10 ppt
-    bindsym Down resize grow height 10 px or 10 ppt
-    bindsym Up resize shrink height 10 px or 10 ppt
-    bindsym Right resize grow width 10 px or 10 ppt
+    bindsym h resize shrink width 5 px or 5 ppt
+    bindsym j resize grow height 5 px or 5 ppt
+    bindsym k resize shrink height 5 px or 5 ppt
+    bindsym l resize grow width 5 px or 5 ppt
+    bindsym Left resize shrink width 5 px or 5 ppt
+    bindsym Down resize grow height 5 px or 5 ppt
+    bindsym Up resize shrink height 5 px or 5 ppt
+    bindsym Right resize grow width 5 px or 5 ppt
+
+    bindsym Control+h resize shrink width 1 px or 1 ppt
+    bindsym Control+j resize grow height 1 px or 1 ppt
+    bindsym Control+k resize shrink height 1 px or 1 ppt
+    bindsym Control+l resize grow width 1 px or 1 ppt
+    bindsym Control+Left resize shrink width 1 px or 1 ppt
+    bindsym Control+Down resize grow height 1 px or 1 ppt
+    bindsym Control+Up resize shrink height 1 px or 1 ppt
+    bindsym Control+Right resize grow width 1 px or 1 ppt
+
+    bindsym Shift+h resize shrink width 20 px or 20 ppt
+    bindsym Shift+j resize grow height 20 px or 20 ppt
+    bindsym Shift+k resize shrink height 20 px or 20 ppt
+    bindsym Shift+l resize grow width 20 px or 20 ppt
+    bindsym Shift+Left resize shrink width 20 px or 20 ppt
+    bindsym Shift+Down resize grow height 20 px or 20 ppt
+    bindsym Shift+Up resize shrink height 20 px or 20 ppt
+    bindsym Shift+Right resize grow width 20 px or 20 ppt
+
     bindsym Return mode "default"
     bindsym Escape mode "default"
     bindsym $mod+r mode "default"
 }
 bindsym $mod+r mode "resize"
+
+# Floating mode.
+mode "float" {
+    bindsym h move left 20 px
+    bindsym j move down 20 px
+    bindsym k move up 20 px
+    bindsym l move right 20 px
+    bindsym Left move left 20 px
+    bindsym Down move down 20 px
+    bindsym Up move up 20 px
+    bindsym Right move right 20 px
+
+    bindsym Control+h move left 5 px
+    bindsym Control+j move down 5 px
+    bindsym Control+k move up 5 px
+    bindsym Control+l move right 5 px
+    bindsym Control+Left move left 5 px
+    bindsym Control+Down move down 5 px
+    bindsym Control+Up move up 5 px
+    bindsym Control+Right move right 5 px
+
+    bindsym Shift+h move left 80 px
+    bindsym Shift+j move down 80 px
+    bindsym Shift+k move up 80 px
+    bindsym Shift+l move right 80 px
+    bindsym Shift+Left move left 80 px
+    bindsym Shift+Down move down 80 px
+    bindsym Shift+Up move up 80 px
+    bindsym Shift+Right move right 80 px
+
+    bindsym c move position center
+    bindsym r mode "resize"
+    bindsym space floating toggle, mode "default"
+    bindsym Return mode "default"
+    bindsym Escape mode "default"
+    bindsym $mod+g mode "default"
+}
+bindsym $mod+g mode "float"
 
 # Media, brightness and screenshots.
 bindsym Print exec --no-startup-id flameshot gui

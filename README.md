@@ -214,6 +214,10 @@ because they require root ownership and should be gated by the active profile.
 | `Super + Tab` | Window switcher |
 | `Super + /` | Keybind cheatsheet |
 | `Super + Ctrl + Space` | Toggle floating |
+| `Super + Ctrl + f` | Float current window, resize to 70%x75%, center |
+| `Super + Shift + c` | Center current floating window |
+| `Super + r` | Enter resize mode |
+| `Super + g` | Enter floating move mode |
 | `Super + Escape` | Lock screen |
 
 ### Menus

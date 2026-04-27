@@ -3,69 +3,82 @@ set -euo pipefail
 
 cat <<'EOF' | rofi -dmenu \
   -i \
-  -p "Atalhos" \
-  -mesg "Digite para filtrar. Enter fecha a lista." \
-  -theme-str 'window { width: 64%; border: 2px; border-color: #3c3836; background-color: #fbf1c7; }' \
+  -p "Keybindings" \
+  -mesg "Type to filter. Enter closes the list." \
+  -theme-str 'window { width: 64%; border: 2px; border-color: #3c3836; background-color: #1d2021; }' \
   -theme-str 'mainbox { padding: 18px; spacing: 10px; }' \
-  -theme-str 'inputbar { padding: 10px; border: 1px; border-color: #7c6f64; background-color: #ebdbb2; }' \
-  -theme-str 'prompt { text-color: #1d2021; font: "JetBrainsMono Nerd Font Bold 11"; }' \
-  -theme-str 'entry { text-color: #1d2021; font: "JetBrainsMono Nerd Font 10"; }' \
-  -theme-str 'message { padding: 6px; text-color: #3c3836; }' \
+  -theme-str 'inputbar { padding: 10px; border: 1px; border-color: #504945; background-color: #282828; }' \
+  -theme-str 'prompt { text-color: #fbf1c7; font: "JetBrainsMono Nerd Font Bold 11"; }' \
+  -theme-str 'entry { text-color: #fbf1c7; font: "JetBrainsMono Nerd Font 10"; }' \
+  -theme-str 'message { padding: 6px; text-color: #bdae93; }' \
   -theme-str 'listview { lines: 22; columns: 1; spacing: 4px; }' \
   -theme-str 'element { padding: 7px 10px; border-radius: 6px; }' \
-  -theme-str 'element selected { background-color: #d5c4a1; text-color: #1d2021; }' \
-  -theme-str 'element-text { font: "JetBrainsMono Nerd Font 10"; text-color: #1d2021; }' >/dev/null
-󰘳  GERAL
+  -theme-str 'element selected { background-color: #3c3836; text-color: #fbf1c7; }' \
+  -theme-str 'element-text { font: "JetBrainsMono Nerd Font 10"; text-color: #fbf1c7; }' >/dev/null
+󰘳  GENERAL
   Super + Enter             Terminal
-  Super + D                 Launcher de apps
-  Super + Shift + F         Explorador de arquivos
-  Super + Tab               Trocar janela pelo rofi
-  Super + /                 Este cheat sheet
-  Super + Shift + E         Menu de energia
-  Super + Shift + W         Trocar wallpaper
-  Super + Shift + Q         Fechar janela
-  Super + Ctrl + R          Reiniciar i3
+  Super + D                 App launcher
+  Super + Shift + F         File manager
+  Super + Tab               Window switcher
+  Super + /                 This cheat sheet
+  Super + Shift + E         Power menu
+  Super + Shift + W         Wallpaper picker
+  Super + Shift + Q         Close window
+  Super + Ctrl + R          Restart i3
 
-󰖲  JANELAS
-  Super + H/J/K/L           Focar esquerda/baixo/cima/direita
-  Super + Setas             Focar por direcao
-  Super + Shift + H/J/K/L   Mover janela
-  Super + Shift + Setas     Mover janela
+󰖲  WINDOWS
+  Super + H/J/K/L           Focus left/down/up/right
+  Super + Arrows            Focus by direction
+  Super + Shift + H/J/K/L   Move window
+  Super + Shift + Arrows    Move window
   Super + F                 Fullscreen
   Super + V                 Split vertical
   Super + B                 Split horizontal
   Super + S                 Layout stacking
   Super + W                 Layout tabbed
-  Super + E                 Alternar split
-  Super + Space             Alternar foco tiling/floating
-  Super + Shift + Space     Alternar floating
-  Super + P                 Mover workspace para outro monitor
+  Super + E                 Toggle split
+  Super + Space             Toggle tiling/floating focus
+  Super + Ctrl + Space      Toggle floating
+  Super + Ctrl + F          Float, resize to 70%x75%, center
+  Super + Shift + C         Center current floating window
+  Super + P                 Move workspace to another monitor
 
 󰃖  WORKSPACES
-  Super + 1..0              Ir para workspace 1..10
-  Super + Shift + 1..0      Mover janela para workspace 1..10
+  Super + 1..0              Go to workspace 1..10
+  Super + Shift + 1..0      Move window to workspace 1..10
 
-󰆍  SCRATCHPAD E BLOQUEIO
-  Super + Shift + -         Enviar janela para scratchpad
-  Super + -                 Mostrar scratchpad
-  Super + Escape            Bloquear tela
+󰆍  SCRATCHPAD AND LOCK
+  Super + Shift + -         Send window to scratchpad
+  Super + -                 Show scratchpad
+  Super + Escape            Lock screen
 
 󰩨  RESIZE
-  Super + R                 Entrar no modo resize
-  H/J/K/L                   Redimensionar no modo resize
-  Setas                     Redimensionar no modo resize
-  Enter / Escape            Sair do modo resize
+  Super + R                 Enter resize mode
+  H/J/K/L or Arrows         Resize by 5px
+  Ctrl + H/J/K/L            Fine resize by 1px
+  Shift + H/J/K/L           Fast resize by 20px
+  Enter / Escape            Exit resize mode
 
-󰄀  MIDIA E SISTEMA
-  Print                     Screenshot area
-  Shift + Print             Screenshot tela inteira para clipboard
-  Super + Print             Screenshot tela inteira em Pictures/Screenshots
-  Super + Shift + S         Screenshot area
-  Super + Shift + R         Gravar tela ou area
-  Volume +/-                Ajustar volume
-  Mute                      Mutar audio
-  Mic Mute                  Mutar microfone
-  Brilho +/-                Ajustar brilho
-  Play / Next / Prev        Controle de midia
-  Display                   Abrir arandr
+󰹑  FLOAT
+  Super + G                 Enter floating move mode
+  H/J/K/L or Arrows         Move by 20px
+  Ctrl + H/J/K/L            Fine move by 5px
+  Shift + H/J/K/L           Fast move by 80px
+  C                         Center window
+  R                         Switch to resize mode
+  Space                     Toggle floating and exit
+  Enter / Escape            Exit float mode
+
+󰄀  MEDIA AND SYSTEM
+  Print                     Area screenshot
+  Shift + Print             Full screenshot to clipboard
+  Super + Print             Full screenshot to Pictures/Screenshots
+  Super + Shift + S         Area screenshot
+  Super + Shift + R         Screen recording menu
+  Volume +/-                Adjust volume
+  Mute                      Mute audio
+  Mic Mute                  Mute microphone
+  Brightness +/-            Adjust brightness
+  Play / Next / Prev        Media control
+  Display                   Open arandr
 EOF
