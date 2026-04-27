@@ -564,7 +564,7 @@ apply_browser_preferences() {
 apply_user_settings() {
   [[ -f "$HOME/.Xresources" ]] && run xrdb -merge "$HOME/.Xresources" || true
   run xdg-mime default thunar.desktop inode/directory || true
-  run gsettings set org.gnome.desktop.interface gtk-theme gruvbox-dark-gtk || true
+  run gsettings set org.gnome.desktop.interface gtk-theme Adwaita-dark || true
   run gsettings set org.gnome.desktop.interface icon-theme Papirus-Dark || true
   run gsettings set org.gnome.desktop.interface cursor-theme Bibata-Modern-Classic || true
   run gsettings set org.gnome.desktop.interface color-scheme prefer-dark || true

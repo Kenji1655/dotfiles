@@ -5,7 +5,7 @@ theme="${1:-gruvbox}"
 
 case "$theme" in
   gruvbox|dark)
-    gtk_theme="gruvbox-dark-gtk"
+    gtk_theme="Adwaita-dark"
     icon_theme="Papirus-Dark"
     cursor_theme="Bibata-Modern-Classic"
     ;;
