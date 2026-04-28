@@ -198,7 +198,7 @@ bindsym XF86MonBrightnessDown exec --no-startup-id brightnessctl -d amdgpu_bl1 s
 bindsym XF86AudioPlay exec --no-startup-id playerctl play-pause
 bindsym XF86AudioNext exec --no-startup-id playerctl next
 bindsym XF86AudioPrev exec --no-startup-id playerctl previous
-bindsym XF86Display exec --no-startup-id arandr
+bindsym XF86Display exec --no-startup-id ~/.local/bin/arandr
 bindsym $mod+Shift+p exec --no-startup-id ~/.local/bin/toggle-touchpad
 bindsym $mod+Shift+m exec --no-startup-id ~/.local/bin/presentation-mode toggle
 

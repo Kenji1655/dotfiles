@@ -2,6 +2,7 @@
 set -euo pipefail
 
 lockfile="/tmp/polybar-monitor-watch.lock"
+inhibit_file="/tmp/monitor-layout-changing"
 exec 9>"$lockfile"
 flock -n 9 || exit 0
 
@@ -12,16 +13,33 @@ monitor_state() {
   xrandr --query 2>/dev/null | awk '/ connected/ {print $1}' | sort | paste -sd ' ' -
 }
 
+needs_recovery() {
+  xrandr --query 2>/dev/null | awk '/ disconnected/ && /[0-9]+x[0-9]+\+[0-9]+\+[0-9]+/ {found=1} END {exit !found}' && return 0
+
+  command -v i3-msg >/dev/null 2>&1 || return 1
+  command -v jq >/dev/null 2>&1 || return 1
+
+  local active_outputs workspace_outputs
+  active_outputs="$(i3-msg -t get_outputs 2>/dev/null | jq -r '.[] | select(.active) | .name' | sort)"
+  workspace_outputs="$(i3-msg -t get_workspaces 2>/dev/null | jq -r '.[].output' | sort -u)"
+  comm -13 <(printf '%s\n' "$active_outputs") <(printf '%s\n' "$workspace_outputs") | grep -q .
+}
+
 last_state="$(monitor_state || true)"
 
-while sleep 0.25; do
+while sleep 2; do
+  [[ -e "$inhibit_file" ]] && continue
+
   current_state="$(monitor_state || true)"
 
   if [[ -n "$current_state" && "$current_state" != "$last_state" ]]; then
-    sleep 0.1
+    sleep 3
+    [[ -e "$inhibit_file" ]] && continue
     current_state="$(monitor_state || true)"
     [[ -n "$current_state" ]] || continue
     last_state="$current_state"
-    "$HOME/.config/polybar/launch.sh" || true
+    "$HOME/.local/bin/monitor-recover" || true
+  elif needs_recovery; then
+    "$HOME/.local/bin/monitor-recover" || true
   fi
 done

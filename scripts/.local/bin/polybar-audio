@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v wpctl >/dev/null 2>&1 || ! command -v timeout >/dev/null 2>&1; then
+  printf '󰝟 n/a\n'
+  exit 0
+fi
+
+status="$(timeout 1s wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null || true)"
+if [[ -z "$status" ]]; then
+  printf '󰝟 off\n'
+  exit 0
+fi
+
+volume="$(awk '{printf "%.0f", $2 * 100}' <<<"$status")"
+if grep -q '\[MUTED\]' <<<"$status"; then
+  printf '󰝟 muted\n'
+else
+  printf ' %s%%\n' "$volume"
+fi

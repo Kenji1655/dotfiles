@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export DISPLAY="${DISPLAY:-:0}"
+export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+
+inhibit_file="/tmp/monitor-layout-changing"
+lockfile="/tmp/arandr-safe.lock"
+
+exec 9>"$lockfile"
+flock -n 9 || exit 0
+
+cleanup() {
+  rm -f "$inhibit_file"
+  "$HOME/.local/bin/monitor-recover" >/dev/null 2>&1 || true
+  "$HOME/.local/bin/picom-control" restart >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
+
+: >"$inhibit_file"
+
+"$HOME/.local/bin/picom-control" stop >/dev/null 2>&1 || true
+pkill -TERM -x polybar 2>/dev/null || true
+sleep 0.5
+
+/usr/sbin/arandr "$@"
+
+# DisplayLink/EVDI often emits several RandR events after arandr exits.
+sleep 2

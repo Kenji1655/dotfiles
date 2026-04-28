@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export DISPLAY="${DISPLAY:-:0}"
+export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+
+lockfile="/tmp/monitor-recover.lock"
+exec 9>"$lockfile"
+flock -n 9 || exit 0
+
+command -v xrandr >/dev/null 2>&1 || exit 0
+command -v i3-msg >/dev/null 2>&1 || exit 0
+command -v jq >/dev/null 2>&1 || exit 0
+
+# DisplayLink/EVDI can leave a disconnected output with an active mode. Force
+# those phantom outputs off so i3 stops assigning workspaces to them.
+while read -r output; do
+  [[ -n "$output" ]] || continue
+  xrandr --output "$output" --off 2>/dev/null || true
+done < <(xrandr --query 2>/dev/null | awk '/ disconnected/ {print $1}')
+
+primary="$(
+  xrandr --query 2>/dev/null | awk '
+    / connected primary/ {print $1; found=1; exit}
+    / connected/ && !fallback {fallback=$1}
+    END {if (!found && fallback) print fallback}
+  '
+)"
+[[ -n "$primary" ]] || exit 0
+
+mapfile -t active_outputs < <(i3-msg -t get_outputs 2>/dev/null | jq -r '.[] | select(.active) | .name')
+((${#active_outputs[@]})) || exit 0
+focused_workspace="$(i3-msg -t get_workspaces 2>/dev/null | jq -r '.[] | select(.focused) | .name' | head -n 1)"
+
+output_is_active() {
+  local output="$1"
+  local active
+  for active in "${active_outputs[@]}"; do
+    [[ "$active" == "$output" ]] && return 0
+  done
+  return 1
+}
+
+if ((${#active_outputs[@]} == 1)); then
+  while read -r workspace; do
+    [[ -n "$workspace" ]] || continue
+    i3-msg "workspace \"${workspace}\"; move workspace to output \"${primary}\"" >/dev/null 2>&1 || true
+  done < <(i3-msg -t get_workspaces 2>/dev/null | jq -r '.[].name')
+else
+  while IFS=$'\t' read -r workspace output; do
+    [[ -n "$workspace" && -n "$output" ]] || continue
+    if ! output_is_active "$output"; then
+      i3-msg "workspace \"${workspace}\"; move workspace to output \"${primary}\"" >/dev/null 2>&1 || true
+    fi
+  done < <(i3-msg -t get_workspaces 2>/dev/null | jq -r '.[] | [.name, .output] | @tsv')
+fi
+
+"$HOME/.config/polybar/launch.sh" >/dev/null 2>&1 || true
+
+if [[ -n "$focused_workspace" ]]; then
+  i3-msg "workspace \"${focused_workspace}\"" >/dev/null 2>&1 || true
+fi
