@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+max_volume="${AUDIO_MAX_VOLUME:-1.50}"
+step="${AUDIO_VOLUME_STEP:-0.05}"
+sink="@DEFAULT_AUDIO_SINK@"
+
+restore_mixer() {
+  if command -v amixer >/dev/null 2>&1; then
+    amixer -q -c Generic_1 set Master 100% unmute 2>/dev/null || true
+    amixer -q -c Generic_1 set Speaker 100% unmute 2>/dev/null || true
+  fi
+}
+
+case "${1:-status}" in
+  up)
+    restore_mixer
+    wpctl set-mute "$sink" 0
+    wpctl set-volume --limit "$max_volume" "$sink" "$step+"
+    ;;
+  down)
+    wpctl set-volume "$sink" "$step-"
+    ;;
+  mute)
+    wpctl set-mute "$sink" toggle
+    ;;
+  mic-mute)
+    wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle
+    ;;
+  boost)
+    restore_mixer
+    wpctl set-mute "$sink" 0
+    wpctl set-volume "$sink" "$max_volume"
+    ;;
+  normal)
+    restore_mixer
+    wpctl set-mute "$sink" 0
+    wpctl set-volume "$sink" 1.00
+    ;;
+  status)
+    wpctl get-volume "$sink"
+    ;;
+  *)
+    printf 'Usage: %s [up|down|mute|mic-mute|boost|normal|status]\n' "$(basename "$0")" >&2
+    exit 2
+    ;;
+esac
