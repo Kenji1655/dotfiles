@@ -562,13 +562,17 @@ apply_browser_preferences() {
 }
 
 apply_user_settings() {
-  [[ -f "$HOME/.Xresources" ]] && run xrdb -merge "$HOME/.Xresources" || true
+  if [[ -f "$HOME/.Xresources" ]]; then
+    run xrdb -merge "$HOME/.Xresources" || true
+  fi
   run xdg-mime default thunar.desktop inode/directory || true
   run gsettings set org.gnome.desktop.interface gtk-theme Adwaita-dark || true
   run gsettings set org.gnome.desktop.interface icon-theme Papirus-Dark || true
   run gsettings set org.gnome.desktop.interface cursor-theme Bibata-Modern-Classic || true
   run gsettings set org.gnome.desktop.interface color-scheme prefer-dark || true
-  command -v update-desktop-database >/dev/null 2>&1 && run update-desktop-database "$HOME/.local/share/applications" || true
+  if command -v update-desktop-database >/dev/null 2>&1; then
+    run update-desktop-database "$HOME/.local/share/applications" || true
+  fi
 }
 
 refresh_package_lists() {

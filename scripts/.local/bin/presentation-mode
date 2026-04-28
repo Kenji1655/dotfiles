@@ -13,14 +13,18 @@ enable_mode() {
 
   xset s off -dpms 2>/dev/null || true
   dunstctl set-paused true 2>/dev/null || true
-  command -v powerprofilesctl >/dev/null 2>&1 && powerprofilesctl set performance 2>/dev/null || true
+  if command -v powerprofilesctl >/dev/null 2>&1; then
+    powerprofilesctl set performance 2>/dev/null || true
+  fi
   notify-send "Presentation mode" "ON: lock, DPMS and notifications paused" 2>/dev/null || true
 }
 
 disable_mode() {
   xset s on +dpms 2>/dev/null || true
   dunstctl set-paused false 2>/dev/null || true
-  command -v powerprofilesctl >/dev/null 2>&1 && powerprofilesctl set balanced 2>/dev/null || true
+  if command -v powerprofilesctl >/dev/null 2>&1; then
+    powerprofilesctl set balanced 2>/dev/null || true
+  fi
   rm -f "$state_file"
   notify-send "Presentation mode" "OFF: normal desktop restored" 2>/dev/null || true
 }

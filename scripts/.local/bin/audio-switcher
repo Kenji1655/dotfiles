@@ -15,7 +15,9 @@ sink_id="${choice%%$'\t'*}"
 pactl set-default-sink "$sink_id"
 
 while read -r input; do
-  [[ -n "$input" ]] && pactl move-sink-input "$input" "$sink_id" || true
+  if [[ -n "$input" ]]; then
+    pactl move-sink-input "$input" "$sink_id" || true
+  fi
 done < <(pactl list short sink-inputs | awk '{print $1}')
 
 notify-send "Audio" "Output: ${choice#*$'\t'}" 2>/dev/null || true

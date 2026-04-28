@@ -11,11 +11,15 @@ notify() {
 }
 
 set_power() {
-  command -v powerprofilesctl >/dev/null 2>&1 && powerprofilesctl set "$1" 2>/dev/null || true
+  if command -v powerprofilesctl >/dev/null 2>&1; then
+    powerprofilesctl set "$1" 2>/dev/null || true
+  fi
 }
 
 restart_polybar() {
-  [[ -x "$HOME/.config/polybar/launch.sh" ]] && "$HOME/.config/polybar/launch.sh" >/dev/null 2>&1 || true
+  if [[ -x "$HOME/.config/polybar/launch.sh" ]]; then
+    "$HOME/.config/polybar/launch.sh" >/dev/null 2>&1 || true
+  fi
 }
 
 case "$mode" in
