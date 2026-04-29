@@ -2,20 +2,20 @@
 set -euo pipefail
 
 dotfiles="$HOME/.dotfiles"
-backup_dir="$dotfiles/backup"
+backup_dir="$dotfiles/.local-backups/package-state"
 timestamp="$(date +%Y%m%d-%H%M%S)"
 
 mkdir -p "$backup_dir"
 
-pacman -Qqe > "$backup_dir/pkglist.txt"
-pacman -Qqm > "$backup_dir/aur-pkglist.txt" 2>/dev/null || true
+pacman -Qqe | sort > "$backup_dir/installed-arch.txt"
+pacman -Qqm | sort > "$backup_dir/installed-aur.txt" 2>/dev/null || true
 
 {
   printf 'Backup: %s\n' "$timestamp"
   printf 'Kernel: %s\n' "$(uname -r)"
   printf 'Host: %s\n' "$(cat /proc/sys/kernel/hostname 2>/dev/null || printf unknown)"
-  printf '\nPacotes oficiais: %s\n' "$(wc -l < "$backup_dir/pkglist.txt")"
-  printf 'Pacotes AUR: %s\n' "$(wc -l < "$backup_dir/aur-pkglist.txt")"
+  printf '\nOfficial packages: %s\n' "$(wc -l < "$backup_dir/installed-arch.txt")"
+  printf 'AUR packages: %s\n' "$(wc -l < "$backup_dir/installed-aur.txt")"
 } > "$backup_dir/last-backup.txt"
 
 if [[ ! -d "$dotfiles/.git" ]]; then
@@ -24,13 +24,17 @@ if [[ ! -d "$dotfiles/.git" ]]; then
   git -C "$dotfiles" config user.email "kenji@local"
 fi
 
+if [[ -x "$dotfiles/scripts/.local/bin/dotfiles-secret-scan" ]]; then
+  "$dotfiles/scripts/.local/bin/dotfiles-secret-scan" "$dotfiles"
+fi
+
 git -C "$dotfiles" add -A
 
 if git -C "$dotfiles" diff --cached --quiet; then
-  notify-send "Backup dotfiles" "Sem mudancas para salvar" 2>/dev/null || true
-  printf 'Sem mudancas para salvar.\n'
+  notify-send "Backup dotfiles" "No changes to save" 2>/dev/null || true
+  printf 'No changes to save.\n'
 else
   git -C "$dotfiles" commit -m "backup: $timestamp"
-  notify-send "Backup dotfiles" "Snapshot criado: $timestamp" 2>/dev/null || true
-  printf 'Snapshot criado: %s\n' "$timestamp"
+  notify-send "Backup dotfiles" "Snapshot created: $timestamp" 2>/dev/null || true
+  printf 'Snapshot created: %s\n' "$timestamp"
 fi

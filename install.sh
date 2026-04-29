@@ -348,7 +348,7 @@ ensure_materialized_dir() {
 
 stow_home() {
   local backup_root
-  backup_root="$DOTFILES_DIR/backup/$(date +%Y%m%d-%H%M%S)"
+  backup_root="$DOTFILES_DIR/.local-backups/stow/$(date +%Y%m%d-%H%M%S)"
   validate_stow_modules
   ensure_materialized_dir "$HOME/.config/systemd"
   ensure_materialized_dir "$HOME/.config/systemd/user"
@@ -367,7 +367,7 @@ stow_home() {
 
 install_system_configs() {
   local backup_root
-  backup_root="$DOTFILES_DIR/backup/system-$(date +%Y%m%d-%H%M%S)"
+  backup_root="$DOTFILES_DIR/.local-backups/system/$(date +%Y%m%d-%H%M%S)"
   local pairs=(
     "$DOTFILES_DIR/ly/etc/ly/config.ini:/etc/ly/config.ini"
   )
@@ -577,12 +577,12 @@ apply_user_settings() {
 
 refresh_package_lists() {
   command -v pacman >/dev/null 2>&1 || return 0
-  run mkdir -p "$DOTFILES_DIR/backup"
+  run mkdir -p "$DOTFILES_DIR/packages"
   if [[ "$DRY_RUN" == 1 ]]; then
-    echo "[dry-run] refresh backup/pkglist.txt and backup/aur-pkglist.txt"
+    echo "[dry-run] refresh packages/installed-arch.txt and packages/installed-aur.txt"
   else
-    pacman -Qqe | sort > "$DOTFILES_DIR/backup/pkglist.txt"
-    pacman -Qqm | sort > "$DOTFILES_DIR/backup/aur-pkglist.txt"
+    pacman -Qqe | sort > "$DOTFILES_DIR/packages/installed-arch.txt"
+    pacman -Qqm | sort > "$DOTFILES_DIR/packages/installed-aur.txt"
   fi
 }
 

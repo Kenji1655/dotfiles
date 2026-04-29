@@ -57,7 +57,7 @@ Docker is kept enabled for compatibility with common tooling and compose project
 
 ## Backup Template
 
-`backup/backup-real.env.example` documents the expected Restic/Borg environment variables. Copy the values to a private, git-ignored location before using `backup-real`.
+`examples/backup-real.env.example` documents the expected Restic/Borg environment variables. Copy the values to a private, git-ignored location before using `backup-real`.
 
 ## Shell Environment
 

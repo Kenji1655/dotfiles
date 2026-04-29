@@ -1,6 +1,0 @@
-Backup: 20260420-023750
-Kernel: 6.19.11-zen1-1-zen
-Host: archlinux
-
-Pacotes oficiais: 223
-Pacotes AUR: 37

@@ -262,8 +262,8 @@ else
   print_status warn "yay" "not installed"
 fi
 
-if [[ -f "$dotfiles/backup/last-backup.txt" ]]; then
-  backup_line="$(sed -n '1p' "$dotfiles/backup/last-backup.txt" 2>/dev/null)"
+if [[ -f "$dotfiles/.local-backups/package-state/last-backup.txt" ]]; then
+  backup_line="$(sed -n '1p' "$dotfiles/.local-backups/package-state/last-backup.txt" 2>/dev/null)"
   print_status ok "last backup" "${backup_line:-available}"
 else
   print_status warn "last backup" "missing"

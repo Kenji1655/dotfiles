@@ -56,7 +56,7 @@ A fullstack and mobile development workstation, tuned end to end.
 
 ```bash
 sudo pacman -Syu --needed git
-git clone https://github.com/Kenji1655/dotfiles.git ~/.dotfiles
+git clone https://github.com/kenjiknk/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 ./install.sh
 sudo reboot
@@ -109,7 +109,7 @@ cd ~/.dotfiles && ./doctor.sh
   packages, vscode                     declarative install lists
   profiles                             machine profiles and local overrides
   scripts                              ~/.local/bin helpers
-  backup, system-notes                 package lists and notes
+  examples, system-notes               safe templates and notes
   install.sh                           single full installer
   doctor.sh                            health check
   README, RECOVERY, REINSTALL, DEV_ENVIRONMENT
@@ -378,7 +378,7 @@ snapshot-manager "before kernel/displaylink update"
 **Personal data backup** — configure Restic or Borg first, then:
 
 ```bash
-install -Dm600 ~/.dotfiles/backup/backup-real.env.example ~/.config/backup/backup-real.env
+install -Dm600 ~/.dotfiles/examples/backup-real.env.example ~/.config/backup/backup-real.env
 nvim ~/.config/backup/backup-real.env
 backup-real
 ```
@@ -466,7 +466,7 @@ If the remote is not configured yet:
 
 ```bash
 cd ~/.dotfiles
-github-remote-setup git@github.com:Kenji1655/dotfiles.git
+github-remote-setup git@github.com:kenjiknk/dotfiles.git
 git push -u origin main
 ```
 
@@ -481,7 +481,7 @@ git push -u origin main
 - **Installer phases** are listed with `./install.sh --list-phases`.
 - **tmux** plugins install with `Ctrl+a` then `I`.
 - **Wallpapers** live wherever you want; the picker defaults to common image folders and uses `feh`.
-- **Local backups and package lists** live under `backup/`.
+- **Local backups** live under `.local-backups/` and are ignored by git. Public package manifests live under `packages/`.
 
 ---
 
