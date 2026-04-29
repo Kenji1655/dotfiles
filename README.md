@@ -13,7 +13,7 @@ A fullstack and mobile development workstation, tuned end to end.
 ![Shell](https://img.shields.io/badge/Shell-Zsh-1A1A1A?style=for-the-badge&logo=gnu-bash&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
 
-[Install](#quick-install) &middot; [Commands](#daily-commands) &middot; [Keybindings](#keybindings) &middot; [Theme](#theme) &middot; [Recovery](RECOVERY.md)
+[Install](#quick-install) &middot; [Commands](#daily-commands) &middot; [Structure](docs/STRUCTURE.md) &middot; [Security](SECURITY.md) &middot; [Recovery](RECOVERY.md)
 
 </div>
 
@@ -22,6 +22,7 @@ A fullstack and mobile development workstation, tuned end to end.
 ## Table of Contents
 
 - [Highlights](#highlights)
+- [Design Goals](#design-goals)
 - [Quick Install](#quick-install)
 - [Repository Layout](#repository-layout)
 - [Portability Model](#portability-model)
@@ -47,6 +48,18 @@ A fullstack and mobile development workstation, tuned end to end.
 - **Picom, Dunst, Alacritty, tmux, Yazi, btop, fastfetch, LazyVim** on a consistent Gruvbox dark palette.
 - **GRUB ThinkPad EFI 2x** dark theme.
 - **TLP, thinkfan, DisplayLink, sensors, TRIM, maintenance timers** and automatic AC/BAT power profiles.
+
+---
+
+## Design Goals
+
+| Goal | What this repo does |
+| --- | --- |
+| One-command rebuild | `./install.sh` drives packages, Stow, system files, services, theme and verification |
+| Public-safe by default | Secrets, browser sessions, local backups and host overrides are ignored |
+| Machine-aware | `profiles/` separates portable defaults from ThinkPad-specific tuning |
+| Observable | `dotfiles check`, `dotfiles-doctor`, `dock-health` and `performance-health` report the system state |
+| Recoverable | `RECOVERY.md`, `REINSTALL.md`, Restic/Borg hooks and snapshot helpers cover rebuilds and failures |
 
 ---
 
@@ -95,6 +108,10 @@ cd ~/.dotfiles && ./doctor.sh
 ---
 
 ## Repository Layout
+
+The repository uses one top-level folder per Stow module. That is intentional:
+each module mirrors the filesystem it installs into. See [`docs/STRUCTURE.md`](docs/STRUCTURE.md)
+for the full map.
 
 ```text
 .dotfiles/
@@ -462,6 +479,8 @@ system-health
 git -C ~/.dotfiles status
 ```
 
+For public-release hygiene, see [`docs/PUBLICATION.md`](docs/PUBLICATION.md) and [`SECURITY.md`](SECURITY.md).
+
 If the remote is not configured yet:
 
 ```bash
@@ -482,6 +501,7 @@ git push -u origin main
 - **tmux** plugins install with `Ctrl+a` then `I`.
 - **Wallpapers** live wherever you want; the picker defaults to common image folders and uses `feh`.
 - **Local backups** live under `.local-backups/` and are ignored by git. Public package manifests live under `packages/`.
+- **License** is MIT. These files are personal workstation configuration, so review before applying them blindly to a different machine.
 
 ---
 
