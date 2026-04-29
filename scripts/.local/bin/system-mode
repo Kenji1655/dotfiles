@@ -40,7 +40,7 @@ case "$mode" in
     ;;
   dock)
     set_power performance
-    monitor-manager detect 2>/dev/null || true
+    monitor-manager dock-dual 2>/dev/null || true
     restart_polybar
     notify "Dock mode active"
     ;;

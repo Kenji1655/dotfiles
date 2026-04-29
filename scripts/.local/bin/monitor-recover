@@ -12,12 +12,18 @@ command -v xrandr >/dev/null 2>&1 || exit 0
 command -v i3-msg >/dev/null 2>&1 || exit 0
 command -v jq >/dev/null 2>&1 || exit 0
 
-# DisplayLink/EVDI can leave a disconnected output with an active mode. Force
-# those phantom outputs off so i3 stops assigning workspaces to them.
+# DisplayLink/EVDI can leave disconnected outputs with an active mode or
+# connected outputs without a mode after hotplug changes. Force those phantom
+# outputs off so i3 stops assigning workspaces to them and EVDI can settle.
 while read -r output; do
   [[ -n "$output" ]] || continue
   xrandr --output "$output" --off 2>/dev/null || true
-done < <(xrandr --query 2>/dev/null | awk '/ disconnected/ {print $1}')
+done < <(
+  xrandr --query 2>/dev/null | awk '
+    / disconnected/ {print $1; next}
+    / connected \(/ {print $1; next}
+  '
+)
 
 primary="$(
   xrandr --query 2>/dev/null | awk '

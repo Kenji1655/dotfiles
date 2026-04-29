@@ -10,6 +10,7 @@ reload_polybar() {
 load_profile() {
   local name="$1"
   autorandr --load "$name"
+  "$HOME/.local/bin/monitor-recover" >/dev/null 2>&1 || true
   reload_polybar
   notify-send "Monitors" "Loaded profile: $name" 2>/dev/null || true
 }
@@ -17,16 +18,24 @@ load_profile() {
 case "$profile" in
   menu)
     mapfile -t profiles < <(autorandr --list 2>/dev/null | sed 's/ .*//g' | sort -u)
-    choices=$'Detect\nSave current\nReload Polybar'
+    choices=$'Recover\nNotebook\nDock single\nDock dual\nSave current\nReload Polybar'
     if ((${#profiles[@]})); then
       choices+=$'\n'
       choices+="$(printf '%s\n' "${profiles[@]}")"
     fi
     choice="$(printf '%s\n' "$choices" | rofi -dmenu -p "Monitors")"
     case "$choice" in
-      Detect)
-        autorandr --change
-        reload_polybar
+      Recover)
+        "$HOME/.local/bin/monitor-recover" || true
+        ;;
+      Notebook)
+        load_profile mobile
+        ;;
+      "Dock single")
+        load_profile dock-single
+        ;;
+      "Dock dual")
+        load_profile displaylink-dock
         ;;
       "Save current")
         name="$(printf 'notebook\ndock-dual\ndock-single\npresentation\n' | rofi -dmenu -p "Profile name")"
@@ -44,9 +53,17 @@ case "$profile" in
     esac
     ;;
   detect)
-    autorandr --change
-    reload_polybar
+    if autorandr --list --detected 2>/dev/null | grep -q '^displaylink-dock'; then
+      load_profile displaylink-dock
+    elif autorandr --list --detected 2>/dev/null | grep -q '^dock-single'; then
+      load_profile dock-single
+    else
+      load_profile mobile
+    fi
     ;;
+  notebook|mobile) load_profile mobile ;;
+  dock-single) load_profile dock-single ;;
+  dock-dual|displaylink-dock) load_profile displaylink-dock ;;
   reload-polybar)
     reload_polybar
     ;;

@@ -10,6 +10,11 @@ lockfile="/tmp/arandr-safe.lock"
 exec 9>"$lockfile"
 flock -n 9 || exit 0
 
+if [[ "${ARANDR_ALLOW_UNSAFE:-0}" != 1 ]] && xrandr --query 2>/dev/null | awk '/^DVI-I-[0-9]+-[0-9]+ connected/ {found=1} END {exit !found}'; then
+  notify-send "DisplayLink safety" "Use Monitor Profiles instead of arandr for DisplayLink docks." 2>/dev/null || true
+  exec "$HOME/.local/bin/monitor-manager" menu
+fi
+
 cleanup() {
   rm -f "$inhibit_file"
   "$HOME/.local/bin/monitor-recover" >/dev/null 2>&1 || true

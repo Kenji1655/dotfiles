@@ -10,7 +10,18 @@ export DISPLAY="${DISPLAY:-:0}"
 export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
 
 monitor_state() {
-  xrandr --query 2>/dev/null | awk '/ connected/ {print $1}' | sort | paste -sd ' ' -
+  xrandr --query 2>/dev/null | awk '
+    / connected/ {
+      state = "off"
+      for (i = 1; i <= NF; i++) {
+        if ($i ~ /^[0-9]+x[0-9]+\+[0-9]+\+[0-9]+$/) {
+          state = $i
+          break
+        }
+      }
+      print $1 ":" state
+    }
+  ' | sort | paste -sd ' ' -
 }
 
 needs_recovery() {

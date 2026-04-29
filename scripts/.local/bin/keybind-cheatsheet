@@ -80,5 +80,5 @@ cat <<'EOF' | rofi -dmenu \
   Mic Mute                  Mute microphone
   Brightness +/-            Adjust brightness
   Play / Next / Prev        Media control
-  Display                   Open arandr
+  Display                   Open monitor profiles
 EOF

@@ -269,13 +269,18 @@ Automatic autorandr hotplug is disabled because DisplayLink/EVDI can emit
 unstable DRM events while a dock is still enumerating. Apply profiles manually
 after connecting the dock.
 
+Do not use `arandr` directly with DisplayLink outputs. RandR changes through
+EVDI can leave the kernel driver stuck in `flip_done timed out`; the local
+`arandr` wrapper redirects to stable monitor profiles instead.
+
 Recommended profile names: `notebook`, `dock-dual`, `dock-single`, `presentation`.
 
 ```bash
 monitor-manager save notebook      # save current layout
 monitor-manager save dock-dual
-monitor-manager dock-dual          # apply a saved profile
-monitor-manager detect             # auto-detect and apply
+monitor-manager dock-dual          # apply the stable dual DisplayLink profile
+monitor-manager dock-single        # apply one external DisplayLink monitor
+monitor-manager mobile             # internal display only
 ```
 
 ---
