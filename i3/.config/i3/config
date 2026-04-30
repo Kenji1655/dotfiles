@@ -49,9 +49,8 @@ bindsym $mod+Tab exec --no-startup-id rofi -show window
 bindsym $mod+Shift+q kill
 bindsym $mod+Control+r restart
 bindsym $mod+Shift+e exec --no-startup-id ~/.config/rofi/power-menu.sh
-bindsym $mod+Shift+w exec --no-startup-id ~/.local/bin/wallpaper-picker
-bindsym $mod+Shift+f exec --no-startup-id ~/.local/bin/tui-file-manager
-bindsym $mod+Shift+space exec --no-startup-id ~/.local/bin/system-control-center
+bindsym $mod+Shift+f exec --no-startup-id alacritty --title "YAZI" -e yazi
+bindsym $mod+Shift+space exec --no-startup-id ~/.local/bin/monitor-manager menu
 bindsym $mod+slash exec --no-startup-id ~/.local/bin/keybind-cheatsheet
 
 # Focus and movement.
@@ -188,7 +187,6 @@ bindsym Print exec --no-startup-id flameshot gui
 bindsym Shift+Print exec --no-startup-id flameshot full -c
 bindsym $mod+Print exec --no-startup-id flameshot full -p ~/Pictures/Screenshots/
 bindsym $mod+Shift+s exec --no-startup-id flameshot gui
-bindsym $mod+Shift+r exec --no-startup-id ~/.local/bin/screen-recorder menu
 bindsym XF86AudioRaiseVolume exec --no-startup-id /home/kenji/.local/bin/audio-volume up
 bindsym XF86AudioLowerVolume exec --no-startup-id /home/kenji/.local/bin/audio-volume down
 bindsym XF86AudioMute exec --no-startup-id /home/kenji/.local/bin/audio-volume mute
@@ -198,9 +196,8 @@ bindsym XF86MonBrightnessDown exec --no-startup-id brightnessctl -d amdgpu_bl1 s
 bindsym XF86AudioPlay exec --no-startup-id playerctl play-pause
 bindsym XF86AudioNext exec --no-startup-id playerctl next
 bindsym XF86AudioPrev exec --no-startup-id playerctl previous
-bindsym XF86Display exec --no-startup-id ~/.local/bin/arandr
+bindsym XF86Display exec --no-startup-id ~/.local/bin/monitor-manager menu
 bindsym $mod+Shift+p exec --no-startup-id ~/.local/bin/toggle-touchpad
-bindsym $mod+Shift+m exec --no-startup-id ~/.local/bin/presentation-mode toggle
 
 # Floating rules.
 for_window [class="Pavucontrol"] floating enable
@@ -214,8 +211,6 @@ for_window [class="YAZI"] floating enable, resize set 1200 760, move position ce
 
 # Autostart services.
 exec_always --no-startup-id ~/.config/polybar/launch.sh
-exec_always --no-startup-id /home/kenji/.local/bin/polybar-monitor-watch
-exec_always --no-startup-id /home/kenji/.local/bin/power-state-watch
 exec_always --no-startup-id /home/kenji/.local/bin/picom-control restart
 exec_always --no-startup-id /home/kenji/.local/bin/audio-volume boost
 exec_always --no-startup-id sh -c "pgrep -x dunst >/dev/null || dunst"

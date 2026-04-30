@@ -115,7 +115,7 @@ if [[ -n "$profile_description" ]]; then
 fi
 
 printf "== Commands ==\n"
-for cmd in dotfiles i3 polybar rofi rofi-drun picom picom-control pavucontrol audio-volume dunst alacritty tmux nvim yazi feh flameshot autorandr xrandr xinput xset pactl sensors dock-health dock-usb-recover security-check performance-health system-mode dev-stack-manager dev-db backup-real backup-health browser-state dotfiles-inventory dotfiles-check snapshot-manager i3lock-blur idle-lock-daemon; do
+for cmd in dotfiles i3 polybar rofi rofi-drun picom picom-control pavucontrol audio-volume dunst alacritty tmux nvim yazi feh flameshot autorandr xrandr xinput xset pactl sensors monitor-manager dock-health dock-usb-recover security-check performance-health backup-real dotfiles-inventory dotfiles-check snapshot-manager i3lock-blur idle-lock-daemon; do
   check_command "$cmd"
 done
 
@@ -145,10 +145,9 @@ for path in \
   "$HOME/.config/nvim" \
   "$HOME/.config/tmux" \
   "$HOME/.config/yazi" \
-  "$HOME/.local/bin/system-control-center" \
-  "$HOME/.local/bin/tui-file-manager" \
+  "$HOME/.local/bin/monitor-manager" \
   "$HOME/.local/bin/dock-health" \
-  "$HOME/.local/bin/system-mode"; do
+  "$HOME/.local/bin/dock-usb-recover"; do
   check_symlink "$path"
 done
 

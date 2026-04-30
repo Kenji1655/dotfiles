@@ -58,8 +58,8 @@ A fullstack and mobile development workstation, tuned end to end.
 | One-command rebuild | `./install.sh` drives packages, Stow, system files, services, theme and verification |
 | Public-safe by default | Secrets, browser sessions, local backups and host overrides are ignored |
 | Machine-aware | `profiles/` separates portable defaults from ThinkPad-specific tuning |
-| Observable | `dotfiles check`, `dotfiles-doctor`, `dock-health` and `performance-health` report the system state |
-| Recoverable | `RECOVERY.md`, `REINSTALL.md`, Restic/Borg hooks and snapshot helpers cover rebuilds and failures |
+| Observable | `dotfiles check`, `dotfiles-doctor` and `dock-health` report the system state |
+| Recoverable | `RECOVERY.md`, `REINSTALL.md`, `dock-usb-recover` and backups cover rebuilds and failures |
 
 ---
 
@@ -175,50 +175,22 @@ because they require root ownership and should be gated by the active profile.
 
 ## Daily Commands
 
-### System
+The daily workflow is intentionally small. Most automation lives behind the main
+`dotfiles` command or in `legacy/scripts/bin` for reference.
 
 | Command | Purpose |
 | --- | --- |
-| `system-control-center` | Categorized Rofi control panel |
-| `dotfiles` | Main CLI for install, verify, inventory, checks, backup and git status |
-| `system-health` | Health check alias for `dotfiles-doctor` |
-| `dotfiles-doctor` | Commands, symlinks, services, display, power, GRUB and git state |
-| `dotfiles-inventory` | Read-only inventory of profile, package lists, Stow modules and local commands |
-| `boot-analysis` | Boot time, slow units and critical chain |
-| `dock-health` | DisplayLink, EVDI, monitors, autorandr and Polybar |
-| `performance-health` | CPU, TLP, zram, swap, storage, boot, heavy processes and containers |
-| `system-mode` | Toggle Work, Battery, Dock, Focus, Dev and Normal |
-| `system-maintenance` | Clean build caches, prune pacman cache, drop debug orphans |
-
-### Backup and Security
-
-| Command | Purpose |
-| --- | --- |
-| `backup-dotfiles` | Update package lists and commit a snapshot |
-| `backup-real` | Run Restic or Borg backup after configuring a repository |
-| `backup-health` | Verify backup config, covered paths and latest Restic/Borg snapshot |
-| `browser-state` | Show browser profiles, critical state files and backup readiness |
-| `snapshot-manager` | Create Timeshift or Snapper checkpoints |
-| `security-check` | Firewall, SSH, listening ports, audit tools |
-| `security-baseline` | Apply a conservative UFW firewall baseline |
-| `dotfiles-secret-scan` | Scan the repo for obvious secrets |
-
-### Development
-
-| Command | Purpose |
-| --- | --- |
-| `dev-services-manager` | Start or stop PostgreSQL, MariaDB, MongoDB, Ollama on demand |
-| `dev-stack-manager` | Stack checks and setup notes |
-| `dev-db` | Launch Postgres, Mongo or MySQL via Podman or Docker |
-
-### Display and Audio
-
-| Command | Purpose |
-| --- | --- |
+| `dotfiles` | Main CLI for install, verify, checks, backup, dock and git status |
+| `dotfiles check` | Local project validation |
+| `dotfiles doctor` | System and dotfiles health check |
+| `dotfiles dock` | DisplayLink/dock health |
+| `dotfiles recover-dock` | Recover the USB dock controller after xHCI failure |
+| `dotfiles monitors` | Open explicit monitor profiles |
 | `monitor-manager` | Load or save autorandr profiles and restart Polybar |
-| `audio-switcher` | Rofi output switcher for PipeWire/PulseAudio |
-| `presentation-mode` | No-lock, no-notifications, no-DPMS |
-| `apply-theme gruvbox` | Reapply GTK, Xresources and i3 Gruvbox settings |
+| `dock-health` | DisplayLink, EVDI, USB dock, monitors, autorandr and Polybar |
+| `audio-volume` | Volume controls used by i3 and Polybar |
+| `backup-real` | Optional Restic/Borg backup after configuring a private repository |
+| `system-maintenance` | Manual cache/package maintenance |
 
 ---
 
@@ -308,27 +280,8 @@ Development setup is part of the single `./install.sh` flow and is documented in
 
 - Ollama, LM Studio
 
-Heavy development services are intentionally **on demand** instead of starting at boot:
-
-```bash
-dev-services-manager
-```
-
-Also available from `system-control-center` as `Dev Services`.
-
-**Container databases**
-
-```bash
-dev-db postgres start
-dev-db mongo start
-dev-db mysql start
-```
-
-**Stack checks**
-
-```bash
-dev-stack-manager
-```
+Heavy development services are intentionally **on demand** instead of starting at boot.
+Use Docker or Podman directly for project-specific databases instead of a dotfiles wrapper.
 
 ---
 
@@ -342,7 +295,8 @@ dotfiles inventory    # profile, package lists, stow modules and commands
 dotfiles check        # syntax, ShellCheck, i3, desktop files, inventory and secret scan
 dotfiles bootstrap    # dry-run package, AUR, Stow and verify phases
 dotfiles verify       # full repo/system verification phase
-dotfiles backup-health
+dotfiles dock         # dock and DisplayLink health
+dotfiles recover-dock # recover USB dock controller after xHCI failure
 ```
 
 Before reinstalling or making larger refactors:
@@ -351,7 +305,6 @@ Before reinstalling or making larger refactors:
 dotfiles check
 backup-real --list-paths
 backup-real --dry-run
-browser-state
 ```
 
 Installer logs are written to:
@@ -409,12 +362,6 @@ backup-real
 Firefox, Zen, Chromium-compatible profiles, browser password databases, session
 state and desktop keyrings. It excludes browser caches and crash/cache folders.
 
-**Browser state check**
-
-```bash
-browser-state
-```
-
 Recovery steps live in [`RECOVERY.md`](RECOVERY.md).
 
 **Performance check**
@@ -425,14 +372,11 @@ performance-health
 
 ---
 
-## Control Center
+## Legacy Helpers
 
-`system-control-center` is organized into categories:
-
-```text
-System       Development   Display       Audio        Power
-Appearance   Maintenance   Security      Dotfiles
-```
+Older convenience wrappers and menus are preserved in `legacy/scripts/bin`, but
+they are no longer installed into `~/.local/bin` by Stow. This keeps the daily
+system lighter while preserving the implementation history.
 
 ---
 
@@ -501,10 +445,10 @@ git push -u origin main
 - **Firefox and Zen** profiles must exist before browser preferences apply. Open each browser once, then rerun `./install.sh`.
 - **Browser profile data** is intentionally not stored in git. Use `backup-real` with Restic or Borg to preserve extensions, bookmarks, sessions, cookies and saved browser state.
 - **DisplayLink** is intentionally conservative: automatic autorandr hotplug is disabled, dock profiles use 60 Hz, and monitor layouts should be applied manually after the dock settles.
-- **Docker and Podman** are both installed. Docker is for compatibility with mainstream dev tooling; Podman is preferred for rootless local database containers through `dev-db`.
+- **Docker and Podman** are both installed. Docker is for compatibility with mainstream dev tooling; Podman is preferred when a project supports rootless containers.
 - **Installer phases** are listed with `./install.sh --list-phases`.
 - **tmux** plugins install with `Ctrl+a` then `I`.
-- **Wallpapers** live wherever you want; the picker defaults to common image folders and uses `feh`.
+- **Wallpapers** are applied by `feh`; keep the selected wallpaper in `~/.config/wallpaper/wall.png` or update `~/.fehbg`.
 - **Local backups** live under `.local-backups/` and are ignored by git. Public package manifests live under `packages/`.
 - **License** is MIT. These files are personal workstation configuration, so review before applying them blindly to a different machine.
 

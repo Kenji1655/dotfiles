@@ -18,11 +18,11 @@ cat <<'EOF' | rofi -dmenu \
 󰘳  GENERAL
   Super + Enter             Terminal
   Super + D                 App launcher
-  Super + Shift + F         File manager
+  Super + Shift + F         File manager (Yazi)
   Super + Tab               Window switcher
   Super + /                 This cheat sheet
   Super + Shift + E         Power menu
-  Super + Shift + W         Wallpaper picker
+  Super + Shift + Space     Monitor profiles
   Super + Shift + Q         Close window
   Super + Ctrl + R          Restart i3
 
@@ -74,7 +74,6 @@ cat <<'EOF' | rofi -dmenu \
   Shift + Print             Full screenshot to clipboard
   Super + Print             Full screenshot to Pictures/Screenshots
   Super + Shift + S         Area screenshot
-  Super + Shift + R         Screen recording menu
   Volume +/-                Adjust volume
   Mute                      Mute audio
   Mic Mute                  Mute microphone

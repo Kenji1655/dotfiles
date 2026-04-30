@@ -63,20 +63,13 @@ sudo reboot
 - DisplayLink usually needs a reboot after install because of DKMS/EVDI.
 - Firefox and Zen need to be opened once before browser profiles exist. Run `./install.sh` again after first opening them if the `user.js` preferences were not applied.
 - To preserve browser extensions, bookmarks, sessions, cookies and saved state,
-  restore `backup-real` data before first browser use and verify with
-  `browser-state`.
-- Wallpapers live in `~/.config/wallpaper` and are managed by `Super + Shift + W`.
-- Run `backup-dotfiles` before big changes to create a local git snapshot and update package lists.
+  restore `backup-real` data before first browser use.
+- Wallpapers live in `~/.config/wallpaper` and are applied with `feh`.
+- Run `dotfiles status` and commit manually before big changes.
 - Run `dotfiles-secret-scan` before pushing to GitHub.
 - Run `system-health` after restoring to verify services, symlinks, displays, sensors and GRUB theme.
 
 ## Useful Commands
-
-Update dotfiles snapshot:
-
-```bash
-backup-dotfiles
-```
 
 Reapply packages, system configs and dotfiles:
 
@@ -89,12 +82,6 @@ Run the system doctor:
 
 ```bash
 system-health
-```
-
-Open the control center:
-
-```bash
-system-control-center
 ```
 
 Check for secrets before pushing:

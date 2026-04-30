@@ -17,8 +17,9 @@ Commands:
   inventory            Show repository inventory.
   check                Run local project checks.
   backup               Run backup-real.
-  backup-health        Check backup readiness and latest snapshots.
-  browser-state        Check browser profile backup readiness.
+  dock                 Show dock health.
+  recover-dock         Recover the USB dock controller.
+  monitors             Open monitor profile menu.
   status               Show git status and recent commits.
   push                 Push local commits to the configured upstream.
   help                 Show this help.
@@ -45,8 +46,9 @@ case "$cmd" in
   inventory) exec dotfiles-inventory "$@" ;;
   check) exec dotfiles-check "$@" ;;
   backup) exec backup-real "$@" ;;
-  backup-health) exec backup-health "$@" ;;
-  browser-state) exec browser-state "$@" ;;
+  dock) exec dock-health "$@" ;;
+  recover-dock) exec dock-usb-recover "$@" ;;
+  monitors) exec monitor-manager menu "$@" ;;
   status)
     git -C "$dotfiles" status --short --branch
     printf '\nRecent commits:\n'

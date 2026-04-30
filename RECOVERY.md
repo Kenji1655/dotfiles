@@ -123,7 +123,6 @@ After a fresh install:
 ```bash
 cd ~/.dotfiles
 ./install.sh
-browser-state
 ```
 
 Restore these paths from Restic or Borg before opening the browsers if you want

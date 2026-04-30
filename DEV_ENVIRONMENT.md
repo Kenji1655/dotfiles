@@ -44,16 +44,7 @@ Run only verification after making changes:
 
 Heavy development services are installed for on-demand use. PostgreSQL, MariaDB, MongoDB and Ollama are not enabled at boot by default.
 
-Use:
-
-```bash
-dev-services-manager
-dev-db postgres start
-dev-db mongo start
-dev-db mysql start
-```
-
-Docker is kept enabled for compatibility with common tooling and compose projects. The installer adds the user to the `docker` group; open a new login session before using Docker without sudo. Podman is preferred for rootless disposable database containers when possible.
+Use Docker Compose, Podman or each service's native `systemctl` unit directly from the project that needs it. Docker is kept enabled for compatibility with common tooling and compose projects. The installer adds the user to the `docker` group; open a new login session before using Docker without sudo.
 
 ## Backup Template
 

@@ -620,7 +620,7 @@ Recommended checks after opening a new terminal:
 - docker version
 - flutter doctor
 
-Development services are installed for on-demand use through system-control-center.
+Development services are installed for on-demand use.
 Reboot to load boot, display manager, kernel, DKMS and power-management changes cleanly.
 EOF
 }
