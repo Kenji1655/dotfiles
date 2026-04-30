@@ -162,6 +162,7 @@ nvm
 pnpm
 yarn
 python
+python-pynvim
 python-pip
 python-pipx
 pyenv
@@ -194,6 +195,7 @@ vscode-json-languageserver
 bash-language-server
 yaml-language-server
 taplo-cli
+tree-sitter-cli
 
 # Databases, mobile, AI and cloud
 postgresql

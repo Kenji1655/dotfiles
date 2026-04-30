@@ -377,6 +377,7 @@ install_system_configs() {
       "$DOTFILES_DIR/tlp/etc/tlp.d/01-thinkpad-e14-amd.conf:/etc/tlp.d/01-thinkpad-e14-amd.conf"
       "$DOTFILES_DIR/thinkfan/etc/thinkfan.yaml:/etc/thinkfan.yaml"
       "$DOTFILES_DIR/thinkfan/etc/modprobe.d/99-thinkfan.conf:/etc/modprobe.d/99-thinkfan.conf"
+      "$DOTFILES_DIR/thinkfan/etc/systemd/system/thinkfan.service.d/override.conf:/etc/systemd/system/thinkfan.service.d/override.conf"
       "$DOTFILES_DIR/lm_sensors/etc/conf.d/lm_sensors:/etc/conf.d/lm_sensors"
       "$DOTFILES_DIR/lm_sensors/etc/sensors.d/thinkpad-e14-ddr5.conf:/etc/sensors.d/thinkpad-e14-ddr5.conf"
       "$DOTFILES_DIR/lm_sensors/etc/sensors.d/thinkpad-isa.conf:/etc/sensors.d/thinkpad-isa.conf"

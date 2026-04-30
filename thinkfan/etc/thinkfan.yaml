@@ -1,5 +1,7 @@
 # ThinkPad E14 AMD fan curve.
 # Uses the hottest value from CPU, iGPU and NVMe sensors.
+# AMD mobile CPUs spike quickly, so each level has wide hysteresis to avoid
+# audible fan hunting during short compile/browser bursts.
 sensors:
   - hwmon: /sys/class/hwmon
     name: k10temp
@@ -18,9 +20,9 @@ fans:
   - tpacpi: /proc/acpi/ibm/fan
 
 levels:
-  - ["level 2", 0, 44]
-  - ["level 3", 40, 52]
-  - ["level 4", 48, 62]
-  - ["level 5", 58, 72]
-  - ["level 7", 68, 80]
-  - ["level full-speed", 76, 255]
+  - ["level 2", 0, 50]
+  - ["level 3", 45, 60]
+  - ["level 4", 55, 70]
+  - ["level 5", 65, 82]
+  - ["level 7", 76, 90]
+  - ["level full-speed", 86, 255]
