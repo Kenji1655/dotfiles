@@ -105,11 +105,13 @@ development_menu() {
 display_menu() {
   case "$(menu "Display" \
     "Monitor Profiles" \
+    "Recover Dock USB" \
     "Wallpaper" \
     "Screenshot Area" \
     "Screen Recording" \
     "Restart Polybar")" in
     "Monitor Profiles") monitor-manager menu ;;
+    "Recover Dock USB") run_terminal "DOCK USB RECOVER" 'dock-usb-recover' ;;
     "Wallpaper") wallpaper-picker ;;
     "Screenshot Area") flameshot gui ;;
     "Screen Recording") screen-recorder menu ;;

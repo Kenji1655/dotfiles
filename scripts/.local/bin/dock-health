@@ -59,6 +59,12 @@ else
   status_line "$ok" "EVDI DRM timeouts" "none in current boot"
 fi
 
+if journalctl -b -k --no-pager 2>/dev/null | grep -Eq 'xHCI host controller not responding|HC died|xHC save state timeout|hcd_pci_runtime_suspend'; then
+  status_line "$fail" "USB dock controller" "xHCI died; run dock-usb-recover, then replug dock"
+else
+  status_line "$ok" "USB dock controller" "no xHCI death in current boot"
+fi
+
 printf '\n== Monitors ==\n'
 if command -v xrandr >/dev/null 2>&1 && [[ -n "${DISPLAY:-}" ]]; then
   xrandr --query 2>/dev/null | awk '

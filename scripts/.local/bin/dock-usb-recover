@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+controller="${1:-0000:05:00.3}"
+driver="/sys/bus/pci/drivers/xhci_hcd"
+device="/sys/bus/pci/devices/$controller"
+
+if [[ ! -e "$device" ]]; then
+  printf 'USB controller not found: %s\n' "$controller" >&2
+  exit 1
+fi
+
+if [[ ! -w "$device/reset" || ! -w "$driver/unbind" || ! -w "$driver/bind" ]]; then
+  exec sudo "$0" "$controller"
+fi
+
+printf 'Recovering dock USB controller %s...\n' "$controller"
+
+systemctl stop displaylink.service 2>/dev/null || true
+
+if [[ -e "$device/reset" ]]; then
+  printf 'Resetting PCI function...\n'
+  printf '1' >"$device/reset"
+  sleep 1
+fi
+
+if [[ -L "$device/driver" ]]; then
+  printf 'Rebinding xhci_hcd...\n'
+  printf '%s' "$controller" >"$driver/unbind"
+  sleep 1
+  printf '%s' "$controller" >"$driver/bind"
+  sleep 3
+fi
+
+systemctl start displaylink.service 2>/dev/null || true
+
+printf 'Done. If dock devices do not reappear, unplug the dock cable for 10 seconds and plug it back in.\n'
