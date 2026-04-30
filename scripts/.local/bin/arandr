@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-export DISPLAY="${DISPLAY:-:0}"
-export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+if [[ -r "$HOME/.local/lib/dotfiles-xsession" ]]; then
+  # shellcheck source=/dev/null
+  source "$HOME/.local/lib/dotfiles-xsession"
+  setup_xsession
+else
+  export DISPLAY="${DISPLAY:-:0}"
+fi
 
 inhibit_file="/tmp/monitor-layout-changing"
 lockfile="/tmp/arandr-safe.lock"

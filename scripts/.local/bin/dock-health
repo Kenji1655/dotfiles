@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-export DISPLAY="${DISPLAY:-:0}"
-export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+if [[ -r "$HOME/.local/lib/dotfiles-xsession" ]]; then
+  # shellcheck source=/dev/null
+  source "$HOME/.local/lib/dotfiles-xsession"
+  setup_xsession
+else
+  export DISPLAY="${DISPLAY:-:0}"
+fi
 
 ok=$'\033[32mOK\033[0m'
 warn=$'\033[33mWARN\033[0m'
@@ -25,6 +30,13 @@ if lsmod 2>/dev/null | awk '{print $1}' | grep -qx evdi; then
   status_line "$ok" "evdi module" "loaded"
 else
   status_line "$warn" "evdi module" "not loaded"
+fi
+
+running_kernel="$(uname -r)"
+if modinfo -k "$running_kernel" evdi >/dev/null 2>&1; then
+  status_line "$ok" "evdi for kernel" "$running_kernel"
+else
+  status_line "$fail" "evdi for kernel" "missing for $running_kernel; reboot after kernel update"
 fi
 
 displaylink_pid="$(systemctl show -p MainPID --value displaylink.service 2>/dev/null || true)"

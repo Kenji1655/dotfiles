@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+setup_xsession() {
+  export DISPLAY="${DISPLAY:-:0}"
+
+  if [[ -z "${XAUTHORITY:-}" || ! -r "${XAUTHORITY:-}" ]]; then
+    local candidate
+    for candidate in "/run/user/$(id -u)/lyxauth" "$HOME/.Xauthority"; do
+      if [[ -r "$candidate" ]]; then
+        export XAUTHORITY="$candidate"
+        break
+      fi
+    done
+  fi
+}

@@ -1,14 +1,45 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ -r "$HOME/.local/lib/dotfiles-xsession" ]]; then
+  # shellcheck source=/dev/null
+  source "$HOME/.local/lib/dotfiles-xsession"
+  setup_xsession
+else
+  export DISPLAY="${DISPLAY:-:0}"
+fi
+
 profile="${1:-menu}"
 
 reload_polybar() {
   "$HOME/.config/polybar/launch.sh" >/dev/null 2>&1 || true
 }
 
+requires_displaylink() {
+  [[ "$1" == "dock-single" || "$1" == "displaylink-dock" || "$1" == "dock-dual" ]]
+}
+
+ensure_displaylink_ready() {
+  local running_kernel
+  running_kernel="$(uname -r)"
+
+  if ! modinfo -k "$running_kernel" evdi >/dev/null 2>&1 && ! grep -q '^evdi ' /proc/modules 2>/dev/null; then
+    notify-send "DisplayLink unavailable" "Reboot into the installed kernel before using dock profiles." 2>/dev/null || true
+    printf 'DisplayLink unavailable: evdi is not built for running kernel %s.\n' "$running_kernel" >&2
+    printf 'Reboot into the installed kernel, then retry monitor-manager.\n' >&2
+    return 1
+  fi
+
+  if ! systemctl is-active --quiet displaylink.service 2>/dev/null; then
+    systemctl start displaylink.service 2>/dev/null || true
+  fi
+}
+
 load_profile() {
   local name="$1"
+  if requires_displaylink "$name"; then
+    ensure_displaylink_ready
+  fi
   autorandr --load "$name"
   "$HOME/.local/bin/monitor-recover" >/dev/null 2>&1 || true
   reload_polybar

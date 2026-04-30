@@ -393,6 +393,7 @@ install_system_configs() {
 
   if [[ "$ENABLE_DISPLAYLINK" == 1 ]]; then
     pairs+=("$DOTFILES_DIR/displaylink/etc/udev/rules.d/40-monitor-hotplug.rules:/etc/udev/rules.d/40-monitor-hotplug.rules")
+    pairs+=("$DOTFILES_DIR/displaylink/etc/systemd/system/displaylink.service.d/override.conf:/etc/systemd/system/displaylink.service.d/override.conf")
   fi
 
   for pair in "${pairs[@]}"; do

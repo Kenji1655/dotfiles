@@ -6,8 +6,13 @@ inhibit_file="/tmp/monitor-layout-changing"
 exec 9>"$lockfile"
 flock -n 9 || exit 0
 
-export DISPLAY="${DISPLAY:-:0}"
-export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+if [[ -r "$HOME/.local/lib/dotfiles-xsession" ]]; then
+  # shellcheck source=/dev/null
+  source "$HOME/.local/lib/dotfiles-xsession"
+  setup_xsession
+else
+  export DISPLAY="${DISPLAY:-:0}"
+fi
 
 monitor_state() {
   xrandr --query 2>/dev/null | awk '
